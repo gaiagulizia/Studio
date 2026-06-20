@@ -12,89 +12,109 @@
 
 <body>
 
-<h1>Produttività</h1>
+<div class="app-container">
 
-<div class="top-panel">
-    <div class="left-column">
-        <div class="time-row">
-            <div class="stopwatch-box">
-                <div class="stopwatch-title">Cronometro</div>
-                <div class="stopwatch-time" id="stopwatch">00:00</div>
-                <div class="stopwatch-controls">
-                    <button class="small-btn" onclick="toggleStopwatch()">Start / Stop</button>
-                    <button class="small-btn" onclick="resetStopwatch()">Reset</button>
-                </div>
-            </div>
+    <h1>Produttività</h1>
 
-            <div class="timer-box">
-                <div class="timer-title">Timer</div>
-                <div class="timer-display" id="timerDisplay">25:00</div>
-                <div class="timer-settings">
-                    <div class="step-control">
-                        <button class="arrow-btn" onclick="changeStudy(-5)">←</button>
-                        <input type="number" id="studyMinutes" class="time-input" value="25" min="1">
-                        <button class="arrow-btn" onclick="changeStudy(5)">→</button>
+    <div class="main-content">
+
+        <!-- ===== COLONNA SINISTRA ===== -->
+        <div class="left-panel">
+
+            <div class="top-panel">
+                <div class="left-column">
+                    <div class="time-row">
+                        <div class="stopwatch-box">
+                            <div class="stopwatch-title">Cronometro</div>
+                            <div class="stopwatch-time" id="stopwatch">00:00</div>
+                            <div class="stopwatch-controls">
+                                <button class="small-btn" onclick="toggleStopwatch()">Start / Stop</button>
+                                <button class="small-btn" onclick="resetStopwatch()">Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="timer-box">
+                            <div class="timer-title">Timer</div>
+                            <div class="timer-display" id="timerDisplay">25:00</div>
+                            <div class="timer-settings">
+                                <div class="step-control">
+                                    <button class="arrow-btn" onclick="changeStudy(-5)">←</button>
+                                    <input type="number" id="studyMinutes" class="time-input" value="25" min="1">
+                                    <button class="arrow-btn" onclick="changeStudy(5)">→</button>
+                                </div>
+                            </div>
+                            <div class="timer-controls">
+                                <button class="small-btn" onclick="startTimer()">Start</button>
+                                <button class="small-btn" onclick="pauseTimer()">Stop</button>
+                                <button class="small-btn" onclick="resetTimer()">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="total-time-wrapper">
+                        <button class="arrow-btn" onclick="changeTotalTime(-300)">←</button>
+                        <div class="total-time">
+                            Tempo Totale: <span id="totalTime">00:00</span>
+                        </div>
+                        <button class="arrow-btn" onclick="changeTotalTime(300)">→</button>
+                        <button class="reset-total-btn" onclick="resetTotalTime()">↺</button>
                     </div>
                 </div>
-                <div class="timer-controls">
-                    <button class="small-btn" onclick="startTimer()">Start</button>
-                    <button class="small-btn" onclick="pauseTimer()">Stop</button>
-                    <button class="small-btn" onclick="resetTimer()">Reset</button>
+
+                <div class="right-column">
+                    <div class="keypad">
+                        <button class="key" onclick="pressNumber(1)">1</button>
+                        <button class="key" onclick="pressNumber(2)">2</button>
+                        <button class="key" onclick="pressNumber(3)">3</button>
+                        <button class="key" onclick="pressNumber(4)">4</button>
+                        <button class="key" onclick="pressNumber(5)">5</button>
+                        <button class="key" onclick="pressNumber(6)">6</button>
+                        <button class="key" onclick="pressNumber(7)">7</button>
+                        <button class="key" onclick="pressNumber(8)">8</button>
+                        <button class="key" onclick="pressNumber(9)">9</button>
+                        <button class="key clear-key" onclick="clearInput()">C</button>
+                        <button class="key" onclick="pressNumber(0)">0</button>
+                        <button class="key" onclick="applyManualTotal()">✓</button>
+                    </div>
+
+                    <div class="counter">
+                        Pagine: <span id="counter">0</span>
+                    </div>
+
+                    <div class="controls">
+                        <button class="add-btn" onclick="addChocolate()">➕ Aggiungi</button>
+                        <button class="remove-btn" onclick="removeChocolate()">➖ Rimuovi</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="total-time-wrapper">
-            <button class="arrow-btn" onclick="changeTotalTime(-300)">←</button>
-            <div class="total-time">
-                Tempo Totale: <span id="totalTime">00:00</span>
+            <div class="box-wrapper">
+                <img class="study-gif" src="https://64.media.tumblr.com/a86753dba21858536a4d4507fd96df87/9c6995b07d21774e-b4/s500x750/92f32f6605203b5f21c18e0d5faf1608409a4fc2.gif">
+                <div class="current-box-area">
+                    <div class="box" id="mainBox"></div>
+                </div>
             </div>
-            <button class="arrow-btn" onclick="changeTotalTime(300)">→</button>
-            <button class="reset-total-btn" onclick="resetTotalTime()">↺</button>
+
         </div>
+
+        <!-- ===== COLONNA DESTRA ===== -->
+        <div class="right-panel">
+
+            <div class="stats-box">
+                <div class="stats-title">Velocità media</div>
+                <div class="stats-value" id="speedValue">0 pag/h</div>
+            </div>
+
+            <div class="completed-section">
+                <div class="completed-title">Scatole completate</div>
+                <div class="completed-boxes" id="completedBoxes"></div>
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="right-column">
-        <div class="keypad">
-            <button class="key" onclick="pressNumber(1)">1</button>
-            <button class="key" onclick="pressNumber(2)">2</button>
-            <button class="key" onclick="pressNumber(3)">3</button>
-            <button class="key" onclick="pressNumber(4)">4</button>
-            <button class="key" onclick="pressNumber(5)">5</button>
-            <button class="key" onclick="pressNumber(6)">6</button>
-            <button class="key" onclick="pressNumber(7)">7</button>
-            <button class="key" onclick="pressNumber(8)">8</button>
-            <button class="key" onclick="pressNumber(9)">9</button>
-            <button class="key clear-key" onclick="clearInput()">C</button>
-            <button class="key" onclick="pressNumber(0)">0</button>
-            <button class="key" onclick="applyManualTotal()">✓</button>
-        </div>
-
-        <div class="counter">
-            Pagine: <span id="counter">0</span>
-        </div>
-
-        <div class="controls">
-            <button class="add-btn" onclick="addChocolate()">➕ Aggiungi</button>
-            <button class="remove-btn" onclick="removeChocolate()">➖ Rimuovi</button>
-        </div>
-    </div>
 </div>
-
-<div class="box-wrapper">
-    <img class="study-gif" src="https://64.media.tumblr.com/a86753dba21858536a4d4507fd96df87/9c6995b07d21774e-b4/s500x750/92f32f6605203b5f21c18e0d5faf1608409a4fc2.gif">
-    <div class="current-box-area">
-        <div class="box" id="mainBox"></div>
-    </div>
-</div>
-
-<div class="stats-box">
-    <div class="stats-title">Velocità media</div>
-    <div class="stats-value" id="speedValue">0 pag/h</div>
-</div>
-
-<div class="completed-title">Scatole completate</div>
-<div class="completed-boxes" id="completedBoxes"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="script.js"></script>
