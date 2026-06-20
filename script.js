@@ -147,7 +147,36 @@ function render() {
     buildArchive();
     updateSpeed();
     save();
+    fitMainBox();
 }
+
+function fitMainBox() {
+    const area = document.querySelector(".current-box-area");
+    const box = document.getElementById("mainBox");
+
+    if (!area || !box) return;
+
+    const ratio = 2.11; // larghezza / altezza
+    const availW = area.clientWidth;
+    const availH = area.clientHeight;
+
+    if (availW <= 0 || availH <= 0) return;
+
+    let w, h;
+
+    if (availW / availH > ratio) {
+        h = availH;
+        w = h * ratio;
+    } else {
+        w = availW;
+        h = w / ratio;
+    }
+
+    box.style.width = w + "px";
+    box.style.height = h + "px";
+}
+
+window.addEventListener("resize", fitMainBox);
 
 function confettiBurst() {
     const duration = 1500;
