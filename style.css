@@ -547,8 +547,16 @@ h1 {
 
     .completed { width: calc(50% - 8px); max-width: 200px; }
 
-    /* Su tablet la gif è più piccola per evitare sovrapposizioni */
-    .study-gif { height: min(60%, 140px); }
+     /* Su tablet la gif è più piccola e posizionata correttamente */
+    .study-gif {
+        height: min(70%, 160px);
+        left: 10px;
+    }
+
+    /* Aggiungi padding a sinistra per evitare sovrapposizione */
+    .current-box-area {
+        padding-left: calc(min(70%, 160px) + 20px);
+    }
 }
 
 /* ================================================
@@ -650,19 +658,19 @@ h1 {
     .completed-section::-webkit-scrollbar-track { background: var(--lightPink); border-radius: 6px; }
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
-    /* SCATOLE COMPLETATE: larghezza fissa pari alla metà della scatola centrale.
-       Il container è largo quanto la scatola centrale, 2 colonne. */
+   /* SCATOLE COMPLETATE: dimensione proporzionale alla scatola principale */
     .completed-boxes {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        width: min(90vw, 480px);
+        gap: 12px;
+        width: 100%;
         margin: 0 auto;
         justify-items: center;
     }
     .completed {
         width: 100%;
-        max-width: none;
+        max-width: calc(min(90vw, 480px) / 2 - 12px);
+        aspect-ratio: 2.11 / 1;
     }
 
     /* Solo scroll verticale nel pannello destra */
