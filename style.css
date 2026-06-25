@@ -544,10 +544,10 @@ h1 {
     .stats-box { padding: 10px 24px; }
     .stats-value { font-size: 24px; }
 
-    .completed { width: calc(50% - 8px); max-width: 200px; }
+    .right-panel .completed { width: calc(50% - 8px); max-width: 200px; }
 
     /* Su tablet nascondi la gif desktop che esce fuori e si sovrappone */
-    .study-gif { display: none; }
+    .left-panel .box-wrapper .study-gif { display: none; }
 
     /* Mostra la gif mobile in modo controllato sopra il tastierino */
     .mobile-side {
@@ -616,7 +616,7 @@ h1 {
     }
 
     /* La gif desktop è nascosta su mobile */
-    .study-gif { display: none; }
+    .left-panel .box-wrapper .study-gif { display: none; }
 
     /* Gif mobile e counter: visibili, posizionati via CSS */
     .mobile-side {
@@ -670,9 +670,8 @@ h1 {
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
     /* SCATOLE COMPLETATE: 2 volte più piccole della scatola centrale.
-       La scatola centrale è ~min(90vw, 480px), quindi ogni completata è ~metà.
-       Usiamo calc per tenere conto del padding del pannello destro. */
-    .completed-boxes {
+       Uso selettori più specifici per sovrascrivere il desktop. */
+    .right-panel .completed-boxes {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
@@ -680,10 +679,12 @@ h1 {
         max-width: calc(min(90vw, 480px));
         margin: 0 auto;
         justify-items: center;
+        align-content: flex-start;
     }
-    .completed {
+    .right-panel .completed {
         width: 100%;
         max-width: none;
+        flex: none;
     }
 
     /* Solo scroll verticale nel pannello destra */
