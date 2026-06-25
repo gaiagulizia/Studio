@@ -202,6 +202,9 @@ h1 {
 }
 .counter span { font-family: "Cherry Bomb One", system-ui; }
 
+/* Contatore mobile: visibile solo su mobile (tra gif e scatola) */
+.counter--mobile { display: none; }
+
 /* Pulsanti aggiungi/rimuovi */
 .controls { flex-shrink: 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
@@ -256,6 +259,7 @@ h1 {
 
 .box {
     position: relative;
+    aspect-ratio: 2.11 / 1;          /* altezza automatica per le scatole completate */
     background-image: url('https://i.ibb.co/CpzX2yvQ/IMG-3742.png');
     background-size: contain;
     background-repeat: no-repeat;
@@ -559,10 +563,18 @@ h1 {
     /* La gif originale (desktop) è nascosta su mobile */
     .study-gif { display: none; }
 
-    /* La gif mobile è visibile tra top-panel e box */
+    /* La gif mobile appare tra top-panel e counter mobile */
     .study-gif-mobile {
         display: block;
-        margin: 6px auto 4px;
+        margin: 6px auto 2px;
+    }
+
+    /* Scambia i counter: nasconde desktop, mostra mobile */
+    .counter--desktop { display: none; }
+    .counter--mobile  {
+        display: block;
+        margin: 4px 0 6px;
+        text-align: center;
     }
 
     .current-box-area {
@@ -591,13 +603,17 @@ h1 {
     .completed-section::-webkit-scrollbar-track { background: var(--lightPink); border-radius: 6px; }
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
-    /* Esattamente 2 scatole per riga */
-    .completed { width: calc(50% - 8px); max-width: none; }
+    /* Esattamente 2 scatole per riga; il width è gestito dal grid */
+    .completed { width: 100%; max-width: none; }
     .completed-boxes {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
     }
+
+    /* Solo scroll verticale nel pannello destra */
+    .right-panel { overflow-x: hidden; }
+    .completed-section { overflow-x: hidden; }
 
     /* Top panel */
     .top-panel { gap: 14px; }
