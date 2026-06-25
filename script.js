@@ -19,9 +19,16 @@ let lastAddedIndex    = -1;
 let animateNewCompleted = false;
 let animateNewEmpty     = false;
 
-const counterEl      = document.getElementById("counter");
-const mainBoxEl      = document.getElementById("mainBox");
+const counterEl        = document.getElementById("counter");
+const counterMobileEl  = document.getElementById("counter-mobile");
+const mainBoxEl        = document.getElementById("mainBox");
 const completedBoxesEl = document.getElementById("completedBoxes");
+
+/* Aggiorna entrambi i display del contatore (desktop + mobile) */
+function setCounterDisplay(val) {
+    counterEl.innerText = val;
+    if (counterMobileEl) counterMobileEl.innerText = val;
+}
 
 /* =============================================
    TRACCIAMENTO DATI GIORNALIERI
@@ -156,7 +163,7 @@ function fitMainBox() {
 }
 
 function render() {
-    counterEl.innerText = manualInput || total;
+    setCounterDisplay(manualInput || total);
     buildMain();
     buildArchive();
     updateSpeed();
@@ -208,7 +215,7 @@ function removeChocolate() {
 function pressNumber(n) {
     if (manualInput.length >= 5) return;
     manualInput += n;
-    counterEl.innerText = manualInput;
+    setCounterDisplay(manualInput);
 }
 
 function clearInput() { manualInput = ""; render(); }
