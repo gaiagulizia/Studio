@@ -144,7 +144,10 @@ function fitMainBox() {
     const ratio  = 2.11;
     const availW = area.clientWidth;
     const availH = area.clientHeight;
-    if (availW <= 0 || availH <= 0) return;
+    if (availW <= 0 || availH <= 0) {
+        requestAnimationFrame(fitMainBox);
+        return;
+    }
     let w, h;
     if (availW / availH > ratio) { h = availH; w = h * ratio; }
     else                          { w = availW; h = w / ratio; }
@@ -162,6 +165,7 @@ function render() {
 }
 
 window.addEventListener("resize", fitMainBox);
+window.addEventListener("load",   fitMainBox);
 
 /* =============================================
    CONFETTI
