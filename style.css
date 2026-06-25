@@ -604,7 +604,7 @@ h1 {
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
     /* Esattamente 2 scatole per riga; il width è gestito dal grid */
-    .completed { width: 100%; max-width: none; }
+    .completed { width: 50%; max-width: none; }
     .completed-boxes {
         display: grid;
         grid-template-columns: 1fr 1fr;
