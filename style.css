@@ -205,6 +205,9 @@ h1 {
 /* Contatori: desktop visibile, mobile nascosto */
 .counter--mobile { display: none; }
 
+/* Gif mobile: nascosta su desktop */
+.mobile-side { display: none; }
+
 /* Pulsanti aggiungi/rimuovi */
 .controls { flex-shrink: 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
@@ -238,14 +241,6 @@ h1 {
     user-select: none;
     pointer-events: none;
     z-index: 2;
-}
-
-/* Gif mobile: nascosta su desktop */
-.study-gif-mobile {
-    display: none;
-    width: clamp(70px, 20vw, 130px);
-    user-select: none;
-    pointer-events: none;
 }
 
 .current-box-area {
@@ -514,9 +509,49 @@ h1 {
 .edit-empty { text-align: center; color: var(--brown); font-size: 13px; padding: 20px; opacity: 0.7; }
 
 /* ================================================
+   TABLET — stesso layout desktop (768px - 1024px)
+   ================================================ */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+    .app-container {
+        padding: 14px 20px;
+        gap: 10px;
+    }
+
+    .left-panel, .right-panel {
+        padding: 14px 16px;
+        border-radius: 24px;
+    }
+
+    .top-panel { gap: 16px; }
+
+    .stopwatch-box, .timer-box {
+        padding: 8px 12px;
+        min-width: 90px;
+    }
+
+    .stopwatch-time, .timer-display { font-size: 20px; }
+
+    .keypad {
+        grid-template-columns: repeat(3, 32px);
+        gap: 5px;
+        padding: 6px;
+    }
+    .key { height: 26px; font-size: 12px; }
+
+    .counter { font-size: 13px; padding: 6px 14px; min-width: 110px; }
+
+    .stats-box { padding: 10px 24px; }
+    .stats-value { font-size: 24px; }
+
+    .completed { width: calc(50% - 8px); max-width: 200px; }
+
+    .study-gif { height: min(70%, 160px); }
+}
+
+/* ================================================
    MOBILE — layout scorrevole (≤ 768px)
    Su telefono il box destro va SOTTO il box sinistro.
-   Tablet (> 768px) usa il layout desktop a 2 colonne.
    ================================================ */
 
 @media (max-width: 768px) {
@@ -563,7 +598,14 @@ h1 {
     /* La gif desktop è nascosta su mobile */
     .study-gif { display: none; }
 
-    /* Gif mobile e counter: visibili solo su mobile, posizionati via CSS */
+    /* Gif mobile e counter: visibili, posizionati via CSS */
+    .mobile-side {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
     .study-gif-mobile {
         display: block;
         width: clamp(60px, 18vw, 110px);
@@ -658,9 +700,9 @@ h1 {
         width: 100%;
     }
 
-    .study-gif-mobile { order: 1; }
-    .counter--mobile   { order: 2; }
-    .keypad            { order: 0; }
+    .mobile-side { order: 1; }
+    .keypad      { order: 0; }
+    .counter--desktop { display: none; }
 }
 
 /* ================================================
@@ -674,7 +716,9 @@ h1 {
     .top-panel { flex-direction: column; align-items: center; }
 
     .right-column {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
         align-items: center;
         gap: 8px;
         width: 100%;
@@ -694,9 +738,8 @@ h1 {
     .save-row-btn  { font-size: 10px; padding: 3px 8px; }
 
     /* Smartphone piccolo: gif e contatore sopra il tastierino */
-    .study-gif-mobile { order: 0; }
-    .counter--mobile   { order: 1; }
-    .keypad            { order: 2; }
+    .mobile-side { order: 0; }
+    .keypad      { order: 1; }
 }
 
 /* Disabilita hover stuck su touch */
