@@ -141,7 +141,7 @@ function updateSpeed() {
 /* Ridimensiona il box mantenendo il rapporto 2.11:1.
    Su mobile usa CSS (aspect-ratio), non il JS. */
 function fitMainBox() {
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 1024) {
         mainBoxEl.style.width  = "";
         mainBoxEl.style.height = "";
         return;
@@ -293,22 +293,26 @@ function changeStudy(amount) {
     if (!timerRunning) { timerSeconds = val * 60; updateTimer(); }
 }
 
-function startTimer() {
-    if (timerRunning) return;
-    timerRunning = true;
-    timerInterval = setInterval(() => {
-        timerSeconds--;
-        totalStudySeconds++;
-        recordTodaySeconds(1);
-        updateTimer();
-        updateTotalTime();
-        updateSpeed();
-        if (timerSeconds <= 0) {
-            clearInterval(timerInterval);
-            timerRunning = false;
-            alert("Tempo finito!");
-        }
-    }, 1000);
+function toggleTimer() {
+    if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+    } else {
+        timerRunning = true;
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            totalStudySeconds++;
+            recordTodaySeconds(1);
+            updateTimer();
+            updateTotalTime();
+            updateSpeed();
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                alert("Tempo finito!");
+            }
+        }, 1000);
+    }
 }
 
 function pauseTimer() { clearInterval(timerInterval); timerRunning = false; }
