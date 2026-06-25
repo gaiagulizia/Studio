@@ -547,15 +547,11 @@ h1 {
 
     .completed { width: calc(50% - 8px); max-width: 200px; }
 
-      /* Su tablet la gif è posizionata correttamente */
+     /* Su tablet la gif è più piccola e posizionata correttamente */
     .study-gif {
         height: min(70%, 160px);
-        left: -100px;
+        left: 10px;
     }
-
-    /* Aggiungi spazio per la gif */
-    .box-wrapper {
-        padding-left: 100px;
 
     /* Aggiungi padding a sinistra per evitare sovrapposizione */
     .current-box-area {
