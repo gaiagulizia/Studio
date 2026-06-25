@@ -7,7 +7,7 @@
 }
 
 /* ================================================
-   BASE STYLES (mobile-first)
+   BASE — desktop e tablet (> 768px)
    ================================================ */
 
 html, body { height: 100%; }
@@ -22,6 +22,7 @@ body {
     overflow: hidden;
 }
 
+/* --- Contenitore principale --- */
 .app-container {
     height: 100vh;
     max-width: 1500px;
@@ -32,6 +33,7 @@ body {
     gap: 12px;
 }
 
+/* --- Header --- */
 .header-row {
     flex-shrink: 0;
     position: relative;
@@ -64,6 +66,7 @@ h1 {
 }
 .stats-open-btn:hover { background: white; transform: translateY(-2px); }
 
+/* --- Contenuto principale: 2 colonne --- */
 .main-content {
     flex: 1;
     display: flex;
@@ -71,7 +74,7 @@ h1 {
     min-height: 0;
 }
 
-/* =================== LEFT PANEL =================== */
+/* =================== COLONNA SINISTRA =================== */
 
 .left-panel {
     flex: 1.35;
@@ -107,6 +110,7 @@ h1 {
     gap: 12px;
 }
 
+/* Cronometro */
 .stopwatch-box {
     background: white;
     padding: 10px 16px;
@@ -118,6 +122,7 @@ h1 {
 .stopwatch-title { font-size: 13px; color: var(--brown); margin-bottom: 1px; font-weight: 600; }
 .stopwatch-time  { font-size: 24px; color: var(--brown); font-family: "Cherry Bomb One", system-ui; margin-bottom: 8px; }
 
+/* Timer */
 .timer-box {
     background: white;
     padding: 10px 14px;
@@ -129,6 +134,7 @@ h1 {
 .timer-title   { font-size: 13px; color: var(--brown); margin-bottom: 1px; font-weight: 600; }
 .timer-display { font-size: 24px; color: var(--brown); font-family: "Cherry Bomb One", system-ui; margin-bottom: 8px; }
 
+/* Pulsanti comuni */
 .small-btn {
     border: none; padding: 6px 10px; border-radius: 10px;
     background: #6d3518; color: white; font-size: 11px;
@@ -157,6 +163,7 @@ h1 {
     color: var(--brown); font-family: "Cherry Bomb One", system-ui;
 }
 
+/* Tempo totale */
 .total-time-wrapper { display: flex; align-items: center; gap: 8px; }
 .total-time {
     background: white; padding: 8px 16px; border-radius: 16px;
@@ -171,6 +178,7 @@ h1 {
 }
 .reset-total-btn:hover { transform: translateY(-2px); }
 
+/* Tastierino */
 .right-column { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
 .keypad {
@@ -194,10 +202,13 @@ h1 {
 }
 .counter span { font-family: "Cherry Bomb One", system-ui; }
 
-/* Mobile-only elements hidden on desktop */
-.mobile-side { display: none; }
+/* Contatori: desktop visibile, mobile nascosto */
 .counter--mobile { display: none; }
 
+/* Gif mobile: nascosta su desktop */
+.mobile-side { display: none; }
+
+/* Pulsanti aggiungi/rimuovi */
 .controls { flex-shrink: 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
 .add-btn, .remove-btn {
@@ -209,6 +220,7 @@ h1 {
 .remove-btn { background: #d84d4d; }
 .add-btn:hover, .remove-btn:hover { transform: translateY(-2px); }
 
+/* Box scatola (centrata su X grazie a position:relative + gif assoluta) */
 .box-wrapper {
     flex: 1;
     min-height: 0;
@@ -219,6 +231,7 @@ h1 {
     justify-content: center;
 }
 
+/* Su desktop/tablet la gif è assoluta a sinistra */
 .study-gif {
     position: absolute;
     left: 0;
@@ -250,6 +263,7 @@ h1 {
     flex-shrink: 0;
 }
 
+/* Animazioni scatola */
 .new-empty-box { animation: slideNewBox 1s cubic-bezier(0.22,1,0.36,1); }
 @keyframes slideNewBox {
     0%   { transform: translateX(120vw); }
@@ -323,7 +337,7 @@ h1 {
     100% { transform: translateY(-130%); opacity: 0; }
 }
 
-/* =================== RIGHT PANEL =================== */
+/* =================== COLONNA DESTRA =================== */
 
 .right-panel {
     flex: 1;
@@ -371,7 +385,7 @@ h1 {
     gap: 20px; padding-bottom: 10px;
 }
 
-/* =================== STATS OVERLAY =================== */
+/* =================== OVERLAY STATISTICHE =================== */
 
 .stat-overlay {
     position: fixed; inset: 0; z-index: 200;
@@ -496,11 +510,10 @@ h1 {
 .edit-empty { text-align: center; color: var(--brown); font-size: 13px; padding: 20px; opacity: 0.7; }
 
 /* ================================================
-   TABLET (769px - 1024px)
+   TABLET — stesso layout desktop con elementi più piccoli
    ================================================ */
 
 @media (max-width: 1024px) and (min-width: 769px) {
-
     .app-container {
         padding: 14px 20px;
         gap: 10px;
@@ -534,20 +547,19 @@ h1 {
 
     .completed { width: calc(50% - 8px); max-width: 200px; }
 
-    /* Riduci la gif desktop per non uscire dal box */
-    .study-gif {
-        height: min(50%, 100px);
-        left: -10px;
-    }
+    /* Su tablet la gif è più piccola per evitare sovrapposizioni */
+    .study-gif { height: min(60%, 140px); }
 }
 
 /* ================================================
-   MOBILE (≤ 768px)
+   MOBILE — layout scorrevole (≤ 768px)
    ================================================ */
 
 @media (max-width: 768px) {
 
+    /* Ripristina scroll naturale */
     html, body { height: auto; overflow-x: hidden; overflow-y: auto; }
+
     body { -webkit-overflow-scrolling: touch; }
 
     .app-container {
@@ -573,7 +585,7 @@ h1 {
         min-height: 0;
     }
 
-    /* Box usa CSS aspect-ratio, non JS */
+    /* Su mobile il box usa CSS, non il JS */
     .box-wrapper {
         height: auto;
         width: 100%;
@@ -584,16 +596,17 @@ h1 {
         gap: 0;
     }
 
-    /* NASCONDI gif desktop */
+    /* La gif desktop è nascosta su mobile */
     .study-gif { display: none; }
 
-    /* MOSTRA gif mobile e contatore */
+    /* Gif mobile e counter: visibili, posizionati via CSS */
     .mobile-side {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 6px;
     }
+
     .study-gif-mobile {
         display: block;
         width: clamp(60px, 18vw, 110px);
@@ -602,7 +615,7 @@ h1 {
     }
 
     .counter--desktop { display: none; }
-    .counter--mobile {
+    .counter--mobile  {
         display: block;
         margin: 0;
         text-align: center;
@@ -618,13 +631,14 @@ h1 {
         order: 1;
     }
 
+    /* Il box si ridimensiona via CSS */
     .box {
         width: min(90vw, 480px) !important;
         height: auto !important;
         aspect-ratio: 2.11 / 1;
     }
 
-    /* Scroll interno pannello destro */
+    /* Colonna destra: scroll interno con max-height */
     .completed-section {
         overflow-y: auto;
         max-height: 300px;
@@ -636,34 +650,36 @@ h1 {
     .completed-section::-webkit-scrollbar-track { background: var(--lightPink); border-radius: 6px; }
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
-    /* SCATOLE COMPLETATE: 2 volte più piccole della centrale */
+    /* SCATOLE COMPLETATE: larghezza fissa pari alla metà della scatola centrale.
+       Il container è largo quanto la scatola centrale, 2 colonne. */
     .completed-boxes {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        width: 100%;
-        max-width: calc(min(90vw, 480px));
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        width: min(90vw, 480px);
         margin: 0 auto;
         justify-items: center;
-        align-content: flex-start;
     }
-    .completed-boxes .completed {
+    .completed {
         width: 100%;
         max-width: none;
-        flex: none;
     }
 
+    /* Solo scroll verticale nel pannello destra */
     .right-panel { overflow-x: hidden; }
     .completed-section { overflow-x: hidden; }
 
+    /* Top panel */
     .top-panel { gap: 14px; }
     .time-row  { gap: 8px; }
     .stopwatch-box, .timer-box { flex: 1; min-width: 0; }
 
+    /* Pulsanti più grandi per touch */
     .small-btn  { padding: 8px 12px; font-size: 12px; }
     .arrow-btn  { width: 30px; height: 30px; }
     .add-btn, .remove-btn { padding: 11px 20px; font-size: 14px; }
 
+    /* Statistiche overlay */
     .stat-overlay { padding: 16px 14px 32px; }
     .stat-heading { font-size: clamp(24px, 5vw, 40px); }
     .charts-row   { flex-direction: column; }
@@ -675,7 +691,7 @@ h1 {
     .period-label { min-width: 140px; font-size: 12px; }
     .period-tab   { padding: 7px 14px; }
 
-    /* Gif e contatore a destra del tastierino */
+    /* MOBILE: gif e contatore a destra del tastierino */
     .right-column {
         flex-direction: row;
         flex-wrap: wrap;
@@ -687,6 +703,7 @@ h1 {
 
     .mobile-side { order: 1; }
     .keypad      { order: 0; }
+    .counter--desktop { display: none; }
 }
 
 /* ================================================
@@ -708,6 +725,7 @@ h1 {
         width: 100%;
     }
 
+    /* time-row rimane in riga anche su schermi piccoli */
     .time-row { flex-direction: row; gap: 6px; }
 
     .stopwatch-box, .timer-box { flex: 1; min-width: 0; }
@@ -720,6 +738,7 @@ h1 {
     .edit-input    { width: 60px; font-size: 11px; }
     .save-row-btn  { font-size: 10px; padding: 3px 8px; }
 
+    /* Smartphone piccolo: gif e contatore sopra il tastierino */
     .mobile-side { order: 0; }
     .keypad      { order: 1; }
 }
