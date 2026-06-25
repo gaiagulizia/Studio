@@ -11,6 +11,20 @@
 <base target="_blank">
 </head>
 <body>
+<script>
+(function() {
+    function setLayoutClass() {
+        var w = window.innerWidth;
+        document.body.classList.remove('layout-desktop', 'layout-tablet', 'layout-mobile', 'layout-phone');
+        if (w <= 420) document.body.classList.add('layout-phone');
+        else if (w <= 768) document.body.classList.add('layout-mobile');
+        else if (w <= 1024) document.body.classList.add('layout-tablet');
+        else document.body.classList.add('layout-desktop');
+    }
+    setLayoutClass();
+    window.addEventListener('resize', setLayoutClass);
+})();
+</script>
 
 <div class="app-container">
 
