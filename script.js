@@ -24,6 +24,7 @@ const counterMobileEl  = document.getElementById("counter-mobile");
 const mainBoxEl        = document.getElementById("mainBox");
 const completedBoxesEl = document.getElementById("completedBoxes");
 
+/* Aggiorna entrambi i display del contatore (desktop + mobile) */
 function setCounterDisplay(val) {
     counterEl.innerText = val;
     if (counterMobileEl) counterMobileEl.innerText = val;
@@ -137,26 +138,44 @@ function updateSpeed() {
     el.innerText = (total / (totalStudySeconds / 3600)).toFixed(1) + " pag/h";
 }
 
+/* Ridimensiona il box mantenendo il rapporto 2.11:1.
+   Su mobile (≤768px) usa CSS (aspect-ratio), non il JS.
+   Su tablet (769px–1024px) riduce la gif per evitare sovrapposizioni. */
 function fitMainBox() {
-    if (window.innerWidth <= 768) {
+    const w = window.innerWidth;
+
+    // Mobile: lascia fare al CSS
+    if (w <= 768) {
         mainBoxEl.style.width  = "";
         mainBoxEl.style.height = "";
         return;
     }
+
     const area = document.querySelector(".current-box-area");
     if (!area || !mainBoxEl) return;
+
     const ratio  = 2.11;
-    const availW = area.clientWidth;
-    const availH = area.clientHeight;
+    let availW = area.clientWidth;
+    let availH = area.clientHeight;
+
+    // Su tablet, sottrae lo spazio occupato dalla gif per evitare sovrapposizioni
+    if (w <= 1024) {
+        const gif = document.querySelector(".study-gif");
+        if (gif) {
+            const gifW = gif.offsetWidth || 140;
+            availW = Math.max(availW - gifW - 20, availW * 0.55);
+        }
+    }
+
     if (availW <= 0 || availH <= 0) {
         requestAnimationFrame(fitMainBox);
         return;
     }
-    let w, h;
-    if (availW / availH > ratio) { h = availH; w = h * ratio; }
-    else                          { w = availW; h = w / ratio; }
-    mainBoxEl.style.width  = w + "px";
-    mainBoxEl.style.height = h + "px";
+    let boxW, boxH;
+    if (availW / availH > ratio) { boxH = availH; boxW = boxH * ratio; }
+    else                          { boxW = availW; boxH = boxW / ratio; }
+    mainBoxEl.style.width  = boxW + "px";
+    mainBoxEl.style.height = boxH + "px";
 }
 
 function render() {
@@ -290,6 +309,7 @@ function changeStudy(amount) {
     if (!timerRunning) { timerSeconds = val * 60; updateTimer(); }
 }
 
+/* Timer: unico tasto Start/Stop */
 function toggleTimer() {
     if (timerRunning) {
         pauseTimer();
@@ -364,7 +384,7 @@ function setStatsMode(mode) {
 }
 
 function changeStatsPeriod(dir) {
-    if (dir > 0 && statsOffset >= 0) return;
+    if (dir > 0 && statsOffset >= 0) return;   // non nel futuro
     statsOffset += dir;
     refreshStats();
 }
