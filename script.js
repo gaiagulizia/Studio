@@ -24,7 +24,6 @@ const counterMobileEl  = document.getElementById("counter-mobile");
 const mainBoxEl        = document.getElementById("mainBox");
 const completedBoxesEl = document.getElementById("completedBoxes");
 
-/* Aggiorna entrambi i display del contatore (desktop + mobile) */
 function setCounterDisplay(val) {
     counterEl.innerText = val;
     if (counterMobileEl) counterMobileEl.innerText = val;
@@ -138,8 +137,6 @@ function updateSpeed() {
     el.innerText = (total / (totalStudySeconds / 3600)).toFixed(1) + " pag/h";
 }
 
-/* Ridimensiona il box mantenendo il rapporto 2.11:1.
-   Su mobile (≤768px) usa CSS (aspect-ratio), non il JS. */
 function fitMainBox() {
     if (window.innerWidth <= 768) {
         mainBoxEl.style.width  = "";
@@ -293,7 +290,6 @@ function changeStudy(amount) {
     if (!timerRunning) { timerSeconds = val * 60; updateTimer(); }
 }
 
-/* Timer: unico tasto Start/Stop */
 function toggleTimer() {
     if (timerRunning) {
         pauseTimer();
@@ -368,7 +364,7 @@ function setStatsMode(mode) {
 }
 
 function changeStatsPeriod(dir) {
-    if (dir > 0 && statsOffset >= 0) return;   // non nel futuro
+    if (dir > 0 && statsOffset >= 0) return;
     statsOffset += dir;
     refreshStats();
 }
