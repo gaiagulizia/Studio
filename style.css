@@ -7,7 +7,7 @@
 }
 
 /* ================================================
-   BASE — desktop (> 768px)
+   BASE STYLES (mobile-first)
    ================================================ */
 
 html, body { height: 100%; }
@@ -70,6 +70,8 @@ h1 {
     gap: 26px;
     min-height: 0;
 }
+
+/* =================== LEFT PANEL =================== */
 
 .left-panel {
     flex: 1.35;
@@ -192,8 +194,9 @@ h1 {
 }
 .counter span { font-family: "Cherry Bomb One", system-ui; }
 
-.counter--mobile { display: none; }
+/* Mobile-only elements hidden on desktop */
 .mobile-side { display: none; }
+.counter--mobile { display: none; }
 
 .controls { flex-shrink: 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
@@ -320,6 +323,8 @@ h1 {
     100% { transform: translateY(-130%); opacity: 0; }
 }
 
+/* =================== RIGHT PANEL =================== */
+
 .right-panel {
     flex: 1;
     min-height: 0;
@@ -365,6 +370,8 @@ h1 {
     justify-content: center; align-content: flex-start;
     gap: 20px; padding-bottom: 10px;
 }
+
+/* =================== STATS OVERLAY =================== */
 
 .stat-overlay {
     position: fixed; inset: 0; z-index: 200;
@@ -489,7 +496,7 @@ h1 {
 .edit-empty { text-align: center; color: var(--brown); font-size: 13px; padding: 20px; opacity: 0.7; }
 
 /* ================================================
-   TABLET — layout desktop ridotto (769px - 1024px)
+   TABLET (769px - 1024px)
    ================================================ */
 
 @media (max-width: 1024px) and (min-width: 769px) {
@@ -527,16 +534,15 @@ h1 {
 
     .completed { width: calc(50% - 8px); max-width: 200px; }
 
-    /* Su tablet la gif desktop viene ridotta per non uscire dal box */
-    .box-wrapper .study-gif {
+    /* Riduci la gif desktop per non uscire dal box */
+    .study-gif {
         height: min(50%, 100px);
         left: -10px;
     }
 }
 
 /* ================================================
-   MOBILE — layout scorrevole (≤ 768px)
-   Su telefono il box destro va SOTTO il box sinistro.
+   MOBILE (≤ 768px)
    ================================================ */
 
 @media (max-width: 768px) {
@@ -567,7 +573,7 @@ h1 {
         min-height: 0;
     }
 
-    /* Su mobile il box usa CSS, non il JS */
+    /* Box usa CSS aspect-ratio, non JS */
     .box-wrapper {
         height: auto;
         width: 100%;
@@ -578,10 +584,10 @@ h1 {
         gap: 0;
     }
 
-    /* NASCONDI la gif desktop su mobile */
-    .box-wrapper .study-gif { display: none; }
+    /* NASCONDI gif desktop */
+    .study-gif { display: none; }
 
-    /* Mostra gif mobile e contatore */
+    /* MOSTRA gif mobile e contatore */
     .mobile-side {
         display: flex;
         flex-direction: column;
@@ -596,7 +602,7 @@ h1 {
     }
 
     .counter--desktop { display: none; }
-    .counter--mobile  {
+    .counter--mobile {
         display: block;
         margin: 0;
         text-align: center;
@@ -618,7 +624,7 @@ h1 {
         aspect-ratio: 2.11 / 1;
     }
 
-    /* Colonna destra: scroll interno */
+    /* Scroll interno pannello destro */
     .completed-section {
         overflow-y: auto;
         max-height: 300px;
@@ -630,10 +636,8 @@ h1 {
     .completed-section::-webkit-scrollbar-track { background: var(--lightPink); border-radius: 6px; }
     .completed-section::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 6px; }
 
-    /* SCATOLE COMPLETATE: 2 volte più piccole della scatola centrale.
-       La scatola centrale è larga min(90vw, 480px).
-       Container = stessa larghezza, 2 colonne = ognuna è metà. */
-    .right-panel .completed-boxes {
+    /* SCATOLE COMPLETATE: 2 volte più piccole della centrale */
+    .completed-boxes {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
@@ -643,7 +647,7 @@ h1 {
         justify-items: center;
         align-content: flex-start;
     }
-    .right-panel .completed-boxes .completed {
+    .completed-boxes .completed {
         width: 100%;
         max-width: none;
         flex: none;
@@ -671,7 +675,7 @@ h1 {
     .period-label { min-width: 140px; font-size: 12px; }
     .period-tab   { padding: 7px 14px; }
 
-    /* MOBILE: gif e contatore a destra del tastierino */
+    /* Gif e contatore a destra del tastierino */
     .right-column {
         flex-direction: row;
         flex-wrap: wrap;
@@ -683,7 +687,6 @@ h1 {
 
     .mobile-side { order: 1; }
     .keypad      { order: 0; }
-    .counter--desktop { display: none; }
 }
 
 /* ================================================
