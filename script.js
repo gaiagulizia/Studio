@@ -31,6 +31,283 @@ function setCounterDisplay(val) {
 }
 
 /* =============================================
+   SISTEMA DI AUTENTICAZIONE
+   ============================================= */
+
+// Chiave per salvare gli utenti in localStorage
+const USERS_STORAGE_KEY = "studio_users";
+const CURRENT_USER_KEY = "studio_current_user";
+
+// Ottieni tutti gli utenti
+function getAllUsers() {
+    try {
+        return JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || "{}");
+    } catch {
+        return {};
+    }
+}
+
+// Salva tutti gli utenti
+function saveAllUsers(users) {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+}
+
+// Ottieni l'utente corrente
+function getCurrentUser() {
+    try {
+        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null");
+    } catch {
+        return null;
+    }
+}
+
+// Salva l'utente corrente
+function saveCurrentUser(user) {
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+}
+
+// Rimuovi l'utente corrente (logout)
+function clearCurrentUser() {
+    localStorage.removeItem(CURRENT_USER_KEY);
+}
+
+// Hash semplice per la password (non crittografico, solo per demo)
+function simpleHash(password) {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+}
+
+// Mostra il modulo di login
+function toggleLoginModal() {
+    const user = getCurrentUser();
+    if (user) {
+        // Se già loggato, mostra il menu utente
+        return;
+    }
+    document.getElementById("loginModal").classList.remove("modal-overlay--hidden");
+    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
+    document.getElementById("loginError").textContent = "";
+}
+
+// Chiudi il modulo di login
+function closeLoginModal() {
+    document.getElementById("loginModal").classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di registrazione
+function showRegister() {
+    document.getElementById("loginModal").classList.add("modal-overlay--hidden");
+    document.getElementById("registerModal").classList.remove("modal-overlay--hidden");
+    document.getElementById("registerError").textContent = "";
+}
+
+// Chiudi il modulo di registrazione
+function closeRegisterModal() {
+    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di login
+function showLogin() {
+    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
+    document.getElementById("loginModal").classList.remove("modal-overlay--hidden");
+    document.getElementById("loginError").textContent = "";
+}
+
+// Funzione di login
+function login(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const errorEl = document.getElementById("loginError");
+    
+    if (!email || !password) {
+        errorEl.textContent = "Inserisci email e password";
+        return;
+    }
+    
+    const users = getAllUsers();
+    const user = users[email];
+    
+    if (!user) {
+        errorEl.textContent = "Utente non trovato";
+        return;
+    }
+    
+    if (user.passwordHash !== simpleHash(password)) {
+        errorEl.textContent = "Password errata";
+        return;
+    }
+    
+    // Login successful
+    saveCurrentUser({ email, name: user.name || email });
+    updateUserUI();
+    closeLoginModal();
+    
+    // Carica i dati dell'utente
+    loadUserData();
+}
+
+// Funzione di registrazione
+function register(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
+    const confirmPassword = document.getElementById("registerConfirmPassword").value;
+    const errorEl = document.getElementById("registerError");
+    
+    if (!email || !password) {
+        errorEl.textContent = "Inserisci email e password";
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        errorEl.textContent = "Le password non corrispondono";
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorEl.textContent = "La password deve essere di almeno 6 caratteri";
+        return;
+    }
+    
+    const users = getAllUsers();
+    
+    if (users[email]) {
+        errorEl.textContent = "Utente già registrato";
+        return;
+    }
+    
+    // Registrazione successful
+    users[email] = {
+        email: email,
+        passwordHash: simpleHash(password),
+        name: email.split('@')[0],
+        createdAt: new Date().toISOString()
+    };
+    
+    saveAllUsers(users);
+    
+    // Auto-login
+    saveCurrentUser({ email, name: email.split('@')[0] });
+    updateUserUI();
+    closeRegisterModal();
+    
+    // Crea spazio dati per il nuovo utente
+    saveUserData();
+}
+
+// Aggiorna l'interfaccia utente in base allo stato di login
+function updateUserUI() {
+    const user = getCurrentUser();
+    const loginBtn = document.getElementById("loginBtn");
+    const userInfo = document.getElementById("userInfo");
+    const userEmail = document.getElementById("userEmail");
+    
+    if (user) {
+        loginBtn.style.display = "none";
+        userInfo.style.display = "flex";
+        userEmail.textContent = user.name || user.email;
+    } else {
+        loginBtn.style.display = "block";
+        userInfo.style.display = "none";
+    }
+}
+
+// Funzione di logout
+function logout() {
+    clearCurrentUser();
+    updateUserUI();
+    
+    // Salva i dati corrente nell'account utente prima di disconnettersi
+    saveUserData();
+    
+    // Reimposta i dati locali
+    resetToDefaultData();
+}
+
+// Salva i dati dell'utente corrente
+function saveUserData() {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const users = getAllUsers();
+    const userEmail = user.email;
+    
+    // Crea o aggiorna i dati dell'utente
+    if (!users[userEmail].data) {
+        users[userEmail].data = {};
+    }
+    
+    // Salva tutti i dati correnti
+    users[userEmail].data = {
+        total: total,
+        totalStudySeconds: totalStudySeconds,
+        dailyData: getAllDailyData(),
+        lastUpdate: new Date().toISOString()
+    };
+    
+    saveAllUsers(users);
+}
+
+// Carica i dati dell'utente corrente
+function loadUserData() {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const users = getAllUsers();
+    const userData = users[user.email]?.data;
+    
+    if (userData) {
+        // Carica i dati salvati
+        total = userData.total || 0;
+        totalStudySeconds = userData.totalStudySeconds || 0;
+        
+        // Salva i dati in localStorage per l'uso corrente
+        localStorage.setItem("total", total);
+        localStorage.setItem("totalStudySeconds", totalStudySeconds);
+        localStorage.setItem("dailyData", JSON.stringify(userData.dailyData || {}));
+        
+        // Ricarica l'interfaccia
+        rebuildBoxes();
+        render();
+        updateTotalTime();
+        updateSpeed();
+    }
+}
+
+// Reimposta ai dati predefiniti (per utente non loggato)
+function resetToDefaultData() {
+    total = 0;
+    totalStudySeconds = 0;
+    saveDailyData({});
+    localStorage.setItem("total", "0");
+    localStorage.setItem("totalStudySeconds", "0");
+    
+    rebuildBoxes();
+    render();
+    updateTotalTime();
+    updateSpeed();
+}
+
+// Controlla l'autenticazione all'avvio
+function checkAuthOnStart() {
+    const user = getCurrentUser();
+    if (user) {
+        updateUserUI();
+        loadUserData();
+    } else {
+        updateUserUI();
+    }
+}
+
+/* =============================================
    TRACCIAMENTO DATI GIORNALIERI
    ============================================= */
 
@@ -51,6 +328,8 @@ function getAllDailyData() {
 
 function saveDailyData(data) {
     localStorage.setItem("dailyData", JSON.stringify(data));
+    // Salva anche nei dati utente se loggato
+    saveUserData();
 }
 
 function recordTodayPages(delta) {
@@ -434,7 +713,7 @@ function getPeriodInfo() {
         const endDate = new Date(monday);
         endDate.setDate(monday.getDate() + 6);
         label = monday.getDate() + " " + IT_MON_S[monday.getMonth()]
-              + " – " + endDate.getDate() + " " + IT_MON_S[endDate.getMonth()]
+              + "  " + endDate.getDate() + " " + IT_MON_S[endDate.getMonth()]
               + " " + endDate.getFullYear();
 
     } else if (statsMode === "month") {
@@ -631,12 +910,15 @@ function saveEditRow(key) {
     saveDailyData(allData);
     refreshStats();
     const btn = document.querySelector(`[onclick="saveEditRow('${key}')"]`);
-    if (btn) { btn.textContent = "✓"; setTimeout(() => btn.textContent = "Salva", 1400); }
+    if (btn) { btn.textContent = ""; setTimeout(() => btn.textContent = "Salva", 1400); }
 }
 
 /* =============================================
    INIT
    ============================================= */
+
+// Inizializza l'autenticazione
+checkAuthOnStart();
 
 rebuildBoxes();
 render();

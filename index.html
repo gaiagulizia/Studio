@@ -29,6 +29,11 @@
 <div class="app-container">
 
     <div class="header-row">
+        <button class="login-btn" id="loginBtn" onclick="toggleLoginModal()">Accedi</button>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span id="userEmail"></span>
+            <button class="logout-btn" onclick="logout()">Esci</button>
+        </div>
         <h1>Produttività</h1>
         <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
     </div>
@@ -44,7 +49,7 @@
                             <div class="stopwatch-time" id="stopwatch">00:00</div>
                             <div class="stopwatch-controls">
                                 <button class="small-btn" onclick="toggleStopwatch()">Start / Stop</button>
-                                <button class="reset-total-btn" onclick="resetStopwatch()">↺</button>
+                                <button class="reset-total-btn" onclick="resetStopwatch()">↻</button>
                             </div>
                         </div>
                         <div class="timer-box">
@@ -59,7 +64,7 @@
                             </div>
                             <div class="timer-controls">
                                 <button class="small-btn" onclick="toggleTimer()">Start / Stop</button>
-                                <button class="reset-total-btn" onclick="resetTimer()">↺</button>
+                                <button class="reset-total-btn" onclick="resetTimer()">↻</button>
                             </div>
                         </div>
                     </div>
@@ -67,7 +72,7 @@
                         <button class="arrow-btn" onclick="changeTotalTime(-300)">←</button>
                         <div class="total-time">Tempo Totale: <span id="totalTime">00:00</span></div>
                         <button class="arrow-btn" onclick="changeTotalTime(300)">→</button>
-                        <button class="reset-total-btn" onclick="resetTotalTime()">↺</button>
+                        <button class="reset-total-btn" onclick="resetTotalTime()">↻</button>
                     </div>
                 </div>
                 <div class="right-column">
@@ -119,11 +124,69 @@
 
 </div>
 
+<!-- Login Modal -->
+<div class="modal-overlay modal-overlay--hidden" id="loginModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Accedi</h2>
+            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="loginForm" onsubmit="login(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="tua@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="form-btn form-btn--primary">Accedi</button>
+                    <button type="button" class="form-btn form-btn--secondary" onclick="showRegister()">Registrati</button>
+                </div>
+            </form>
+            <div id="loginError" class="error-message"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal-overlay modal-overlay--hidden" id="registerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Registrati</h2>
+            <button class="modal-close" onclick="closeRegisterModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="registerForm" onsubmit="register(event)">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" class="form-input" placeholder="tua@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" class="form-input" placeholder="Password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Conferma Password</label>
+                    <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Conferma Password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="form-btn form-btn--primary">Registrati</button>
+                    <button type="button" class="form-btn form-btn--secondary" onclick="showLogin()">Accedi</button>
+                </div>
+            </form>
+            <div id="registerError" class="error-message"></div>
+        </div>
+    </div>
+</div>
+
 <div class="stat-overlay stat-overlay--hidden" id="statsOverlay">
     <div class="stat-page">
         <div class="stat-topbar">
             <h2 class="stat-heading">Statistiche</h2>
-            <button class="stat-close-btn" onclick="closeStats()">✕</button>
+            <button class="stat-close-btn" onclick="closeStats()">×</button>
         </div>
         <div class="stat-controls">
             <div class="period-tabs">
@@ -143,7 +206,7 @@
                 <div class="stat-total-value" id="statsTotalPages">0</div>
             </div>
             <div class="stat-total-card">
-                <div class="stat-total-label">⏱ Ore di studio</div>
+                <div class="stat-total-label">⏰ Ore di studio</div>
                 <div class="stat-total-value" id="statsTotalHours">0h 00m</div>
             </div>
         </div>
