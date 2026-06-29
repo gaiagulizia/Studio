@@ -49,9 +49,15 @@ h1 {
     text-align: center;
 }
 
-.stats-open-btn {
+.header-controls {
     position: absolute;
     right: 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.stats-open-btn {
     border: none;
     padding: 8px 18px;
     border-radius: 14px;
@@ -66,10 +72,8 @@ h1 {
 }
 .stats-open-btn:hover { background: white; transform: translateY(-2px); }
 
-/* Login Button */
-.login-btn {
-    position: absolute;
-    left: 0;
+/* Menu Button */
+.menu-btn {
     border: none;
     padding: 8px 18px;
     border-radius: 14px;
@@ -81,42 +85,16 @@ h1 {
     cursor: pointer;
     transition: 0.2s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-}
-.login-btn:hover { background: white; transform: translateY(-2px); }
-
-/* User Info */
-.user-info {
-    position: absolute;
-    left: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.7);
-    padding: 8px 18px;
-    border-radius: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    gap: 6px;
 }
+.menu-btn:hover { background: white; transform: translateY(-2px); }
 
-.user-info span {
-    color: var(--brown);
-    font-size: 12px;
-    font-weight: 600;
-    font-family: "DynaPuff", system-ui;
+.menu-btn::after {
+    content: "⋮";
+    font-size: 14px;
 }
-
-.logout-btn {
-    border: none;
-    background: none;
-    color: var(--brown);
-    font-size: 12px;
-    font-weight: 600;
-    font-family: "DynaPuff", system-ui;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-    text-decoration: underline;
-}
-.logout-btn:hover { color: #3a1a0a; }
 
 /* --- Contenuto principale: 2 colonne --- */
 .main-content {
@@ -818,68 +796,7 @@ h1 {
 }
 
 /* ================================================
-   RESPONSIVE: MOBILE E TABLET
-   ================================================ */
-
-@media (max-width: 1024px) {
-    .app-container { padding: 12px 20px; }
-
-    .main-content { flex-direction: column; }
-
-    .left-panel { flex: none; width: 100%; }
-    .right-panel { flex: none; width: 100%; }
-
-    .top-panel { flex-direction: column; align-items: center; }
-    .time-row { flex-direction: column; align-items: center; }
-
-    .stats-box, .completed-section { width: 100%; }
-
-    .completed-boxes { align-items: center; }
-
-    .study-gif { display: none; }
-}
-
-@media (max-width: 768px) {
-    .header-row { flex-direction: column; gap: 12px; }
-    .stats-open-btn { position: static; }
-
-    .time-row { width: 100%; }
-    .stopwatch-box, .timer-box { width: 100%; }
-
-    .total-time-wrapper { flex-wrap: wrap; justify-content: center; }
-
-    .keypad { max-width: 300px; }
-
-    .box { max-width: 90vw; }
-
-    .stat-page { width: 95%; max-height: 95vh; }
-    .stat-controls { flex-direction: column; align-items: stretch; }
-    .period-tabs { justify-content: center; }
-    .period-nav { justify-content: center; }
-    .stat-totals { justify-content: center; }
-    .stat-total-card { width: 90%; }
-
-    .edit-table th, .edit-table td { font-size: 11px; padding: 6px 6px; }
-    .edit-input    { width: 60px; font-size: 11px; }
-    .save-row-btn  { font-size: 10px; padding: 3px 8px; }
-
-    /* Smartphone piccolo: gif e contatore sopra il tastierino */
-    .mobile-side { order: 0; }
-    .keypad      { order: 1; }
-}
-
-/* Disabilita hover stuck su touch */
-@media (hover: none) {
-    .small-btn:hover, .arrow-btn:hover,
-    .add-btn:hover, .remove-btn:hover,
-    .reset-total-btn:hover, .key:hover,
-    .period-tab:hover, .nav-arrow:hover,
-    .edit-toggle-btn:hover, .save-row-btn:hover,
-    .stats-open-btn:hover, .stat-close-btn:hover { transform: none; }
-}
-
-/* ================================================
-   MODAL DI AUTENTICAZIONE
+   MODAL DI AUTENTICAZIONE E IMPOSTAZIONI
    ================================================ */
 
 .modal-overlay {
@@ -911,6 +828,10 @@ h1 {
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
+}
+
+.settings-modal-content {
+    max-width: 500px;
 }
 
 @keyframes modalSlideIn {
@@ -955,6 +876,45 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+}
+
+.settings-section h3 {
+    font-size: 14px;
+    color: var(--brown);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.user-info-setting {
+    text-align: center;
+    padding: 12px;
+}
+
+.user-info-setting p {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.date-info {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.date-info span {
+    font-weight: 600;
+    color: var(--brown);
 }
 
 .form-group {
@@ -1061,4 +1021,73 @@ h1 {
     .form-btn {
         width: 100%;
     }
+}
+
+/* ================================================
+   RESPONSIVE: MOBILE E TABLET
+   ================================================ */
+
+@media (max-width: 1024px) {
+    .app-container { padding: 12px 20px; }
+
+    .main-content { flex-direction: column; }
+
+    .left-panel { flex: none; width: 100%; }
+    .right-panel { flex: none; width: 100%; }
+
+    .top-panel { flex-direction: column; align-items: center; }
+    .time-row { flex-direction: column; align-items: center; }
+
+    .stats-box, .completed-section { width: 100%; }
+
+    .completed-boxes { align-items: center; }
+
+    .study-gif { display: none; }
+    
+    .header-controls {
+        position: static;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-row { flex-direction: column; gap: 12px; }
+    .header-controls { width: 100%; justify-content: center; }
+    .stats-open-btn { position: static; }
+
+    .time-row { width: 100%; }
+    .stopwatch-box, .timer-box { width: 100%; }
+
+    .total-time-wrapper { flex-wrap: wrap; justify-content: center; }
+
+    .keypad { max-width: 300px; }
+
+    .box { max-width: 90vw; }
+
+    .stat-page { width: 95%; max-height: 95vh; }
+    .stat-controls { flex-direction: column; align-items: stretch; }
+    .period-tabs { justify-content: center; }
+    .period-nav { justify-content: center; }
+    .stat-totals { justify-content: center; }
+    .stat-total-card { width: 90%; }
+
+    .edit-table th, .edit-table td { font-size: 11px; padding: 6px 6px; }
+    .edit-input    { width: 60px; font-size: 11px; }
+    .save-row-btn  { font-size: 10px; padding: 3px 8px; }
+
+    /* Smartphone piccolo: gif e contatore sopra il tastierino */
+    .mobile-side { order: 0; }
+    .keypad      { order: 1; }
+}
+
+/* Disabilita hover stuck su touch */
+@media (hover: none) {
+    .small-btn:hover, .arrow-btn:hover,
+    .add-btn:hover, .remove-btn:hover,
+    .reset-total-btn:hover, .key:hover,
+    .period-tab:hover, .nav-arrow:hover,
+    .edit-toggle-btn:hover, .save-row-btn:hover,
+    .stats-open-btn:hover, .stat-close-btn:hover,
+    .menu-btn:hover, .form-btn:hover,
+    .modal-close:hover { transform: none; }
 }

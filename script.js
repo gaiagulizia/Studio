@@ -12,6 +12,10 @@ const chocolates = [
 const lidImage = 'https://i.ibb.co/PGZv7Nnw/IMG-3743.png';
 const MAX = 10;
 
+// Variabili per la gestione della data personalizzata
+let customDate = null; // null = usa la data di oggi, altrimenti stringa nel formato YYYY-MM-DD
+const CUSTOM_DATE_KEY = "studio_custom_date";
+
 let total        = Number(localStorage.getItem("total")) || 0;
 let boxes        = [];
 let manualInput  = "";
@@ -29,6 +33,171 @@ function setCounterDisplay(val) {
     counterEl.innerText = val;
     if (counterMobileEl) counterMobileEl.innerText = val;
 }
+
+/* =============================================
+   GESTIONE DATA PERSONALIZZATA
+   ============================================= */
+
+// Ottieni la data corrente (o quella personalizzata)
+function getCurrentDate() {
+    if (customDate) {
+        return new Date(customDate + "T00:00:00");
+    }
+    return new Date();
+}
+
+// Ottieni la chiave del giorno corrente (o personalizzato)
+function getTodayKey() {
+    const today = getCurrentDate();
+    today.setHours(0, 0, 0, 0);
+    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Imposta una data personalizzata
+function setCustomDate() {
+    const dateInput = document.getElementById("customDate");
+    const selectedDate = dateInput.value;
+    
+    if (!selectedDate) {
+        alert("Seleziona una data valida");
+        return;
+    }
+    
+    // Salva la data personalizzata
+    customDate = selectedDate;
+    localStorage.setItem(CUSTOM_DATE_KEY, customDate);
+    
+    // Salva i dati correnti per la data di oggi (se non è già la data selezionata)
+    const oldTodayKey = getTodayKey();
+    const oldDate = getCurrentDate();
+    oldDate.setHours(0, 0, 0, 0);
+    const oldDateKey = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
+    
+    if (oldDateKey !== customDate && (total > 0 || totalStudySeconds > 0)) {
+        // Salva i dati nella vecchia data
+        saveDataForDate(oldDateKey);
+    }
+    
+    // Reimposta i dati per la nuova data
+    loadDataForDate(customDate);
+    
+    // Aggiorna l'interfaccia
+    updateCurrentDateDisplay();
+    render();
+    updateTotalTime();
+    updateSpeed();
+}
+
+// Reimposta alla data di oggi
+function resetToToday() {
+    customDate = null;
+    localStorage.removeItem(CUSTOM_DATE_KEY);
+    
+    // Salva i dati per la data personalizzata precedente
+    const oldTodayKey = getTodayKey();
+    if (oldTodayKey && (total > 0 || totalStudySeconds > 0)) {
+        saveDataForDate(oldTodayKey);
+    }
+    
+    // Carica i dati per oggi
+    loadDataForDate(null);
+    
+    // Aggiorna l'interfaccia
+    updateCurrentDateDisplay();
+    document.getElementById("customDate").value = "";
+    render();
+    updateTotalTime();
+    updateSpeed();
+}
+
+// Salva i dati per una specifica data
+function saveDataForDate(dateKey) {
+    const allData = getAllDailyData();
+    if (!allData[dateKey]) {
+        allData[dateKey] = { pages: 0, seconds: 0 };
+    }
+    allData[dateKey].pages = total;
+    allData[dateKey].seconds = totalStudySeconds;
+    saveDailyData(allData);
+}
+
+// Carica i dati per una specifica data
+function loadDataForDate(dateKey) {
+    const allData = getAllDailyData();
+    const key = dateKey || getTodayKey();
+    const data = allData[key] || { pages: 0, seconds: 0 };
+    
+    total = data.pages || 0;
+    totalStudySeconds = data.seconds || 0;
+    
+    // Salva nei localStorage correnti
+    localStorage.setItem("total", total);
+    localStorage.setItem("totalStudySeconds", totalStudySeconds);
+}
+
+// Aggiorna il display della data corrente
+function updateCurrentDateDisplay() {
+    const currentDate = getCurrentDate();
+    const dateEl = document.getElementById("currentDateDisplay");
+    if (dateEl) {
+        const day = currentDate.getDate();
+        const month = currentDate.getMonth() + 1;
+        const year = currentDate.getFullYear();
+        dateEl.textContent = `${day}/${month}/${year}`;
+    }
+    
+    // Aggiorna anche il valore dell'input date
+    const dateInput = document.getElementById("customDate");
+    if (dateInput) {
+        if (customDate) {
+            dateInput.value = customDate;
+        } else {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            dateInput.value = today.toISOString().slice(0, 10);
+        }
+    }
+}
+
+// Controlla se è mezzanotte e resetta i dati
+function checkMidnightReset() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    
+    // Se è tra la mezzanotte e l'1:00 AM
+    if (hours === 0 && minutes < 5) {
+        // Salva i dati del giorno precedente
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        
+        // Salva solo se ci sono dati da salvare
+        if (total > 0 || totalStudySeconds > 0) {
+            saveDataForDate(yesterdayKey);
+        }
+        
+        // Resetta i dati per il nuovo giorno
+        total = 0;
+        totalStudySeconds = 0;
+        localStorage.setItem("total", "0");
+        localStorage.setItem("totalStudySeconds", "0");
+        
+        // Aggiorna l'interfaccia
+        rebuildBoxes();
+        render();
+        updateTotalTime();
+        updateSpeed();
+    }
+}
+
+// Controlla la mezzanotte periodicamente
+setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
 
 /* =============================================
    SISTEMA DI AUTENTICAZIONE
@@ -80,6 +249,44 @@ function simpleHash(password) {
         hash = hash & hash; // Convert to 32bit integer
     }
     return hash.toString();
+}
+
+// Mostra il menù delle impostazioni
+function toggleSettingsMenu() {
+    const modal = document.getElementById("settingsModal");
+    modal.classList.toggle("modal-overlay--hidden");
+    
+    // Aggiorna le informazioni utente nel menù
+    updateSettingsUserInfo();
+    updateCurrentDateDisplay();
+}
+
+// Chiudi il menù delle impostazioni
+function closeSettingsMenu() {
+    document.getElementById("settingsModal").classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di login dal menù delle impostazioni
+function showLoginFromSettings() {
+    closeSettingsMenu();
+    toggleLoginModal();
+}
+
+// Aggiorna le informazioni utente nel menù delle impostazioni
+function updateSettingsUserInfo() {
+    const user = getCurrentUser();
+    const userInfoSetting = document.getElementById("userInfoSetting");
+    const loggedInUserInfo = document.getElementById("loggedInUserInfo");
+    const settingsUserEmail = document.getElementById("settingsUserEmail");
+    
+    if (user) {
+        userInfoSetting.style.display = "none";
+        loggedInUserInfo.style.display = "block";
+        settingsUserEmail.textContent = user.name || user.email;
+    } else {
+        userInfoSetting.style.display = "block";
+        loggedInUserInfo.style.display = "none";
+    }
 }
 
 // Mostra il modulo di login
@@ -211,22 +418,25 @@ function updateUserUI() {
     const userEmail = document.getElementById("userEmail");
     
     if (user) {
-        loginBtn.style.display = "none";
-        userInfo.style.display = "flex";
-        userEmail.textContent = user.name || user.email;
+        if (loginBtn) loginBtn.style.display = "none";
+        if (userInfo) userInfo.style.display = "flex";
+        if (userEmail) userEmail.textContent = user.name || user.email;
     } else {
-        loginBtn.style.display = "block";
-        userInfo.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "block";
+        if (userInfo) userInfo.style.display = "none";
     }
+    
+    // Aggiorna anche nel menù delle impostazioni
+    updateSettingsUserInfo();
 }
 
 // Funzione di logout
 function logout() {
-    clearCurrentUser();
-    updateUserUI();
-    
     // Salva i dati corrente nell'account utente prima di disconnettersi
     saveUserData();
+    
+    clearCurrentUser();
+    updateUserUI();
     
     // Reimposta i dati locali
     resetToDefaultData();
@@ -246,12 +456,15 @@ function saveUserData() {
     }
     
     // Salva tutti i dati correnti
-    users[userEmail].data = {
+    const currentDateKey = getTodayKey();
+    users[userEmail].data[currentDateKey] = {
         total: total,
         totalStudySeconds: totalStudySeconds,
-        dailyData: getAllDailyData(),
         lastUpdate: new Date().toISOString()
     };
+    
+    // Salva anche i dati giornalieri
+    users[userEmail].dailyData = getAllDailyData();
     
     saveAllUsers(users);
 }
@@ -262,17 +475,24 @@ function loadUserData() {
     if (!user) return;
     
     const users = getAllUsers();
-    const userData = users[user.email]?.data;
+    const userData = users[user.email];
     
-    if (userData) {
-        // Carica i dati salvati
-        total = userData.total || 0;
-        totalStudySeconds = userData.totalStudySeconds || 0;
+    if (userData && userData.dailyData) {
+        // Carica i dati giornalieri
+        saveDailyData(userData.dailyData);
         
-        // Salva i dati in localStorage per l'uso corrente
-        localStorage.setItem("total", total);
-        localStorage.setItem("totalStudySeconds", totalStudySeconds);
-        localStorage.setItem("dailyData", JSON.stringify(userData.dailyData || {}));
+        // Carica i dati per la data corrente
+        const currentDateKey = getTodayKey();
+        const dateData = userData.data?.[currentDateKey];
+        
+        if (dateData) {
+            total = dateData.total || 0;
+            totalStudySeconds = dateData.totalStudySeconds || 0;
+            
+            // Salva nei localStorage correnti
+            localStorage.setItem("total", total);
+            localStorage.setItem("totalStudySeconds", totalStudySeconds);
+        }
         
         // Ricarica l'interfaccia
         rebuildBoxes();
@@ -305,21 +525,20 @@ function checkAuthOnStart() {
     } else {
         updateUserUI();
     }
+    
+    // Controlla se c'è una data personalizzata salvata
+    const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
+    if (savedCustomDate) {
+        customDate = savedCustomDate;
+    }
+    
+    // Aggiorna il display della data
+    updateCurrentDateDisplay();
 }
 
 /* =============================================
    TRACCIAMENTO DATI GIORNALIERI
    ============================================= */
-
-function getTodayKey() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
 
 function getAllDailyData() {
     try { return JSON.parse(localStorage.getItem("dailyData") || "{}"); }
@@ -542,7 +761,6 @@ function applyManualTotal() {
 let stopwatchSeconds  = 0;
 let stopwatchInterval = null;
 let stopwatchRunning  = false;
-let totalStudySeconds = Number(localStorage.getItem("totalStudySeconds")) || 0;
 let timerSeconds  = 1500;
 let timerInterval = null;
 let timerRunning  = false;
@@ -688,7 +906,7 @@ function getDateKey(date) {
 
 function getPeriodInfo() {
     const allData = getAllDailyData();
-    const today   = new Date();
+    const today   = getCurrentDate();
     today.setHours(0, 0, 0, 0);
 
     let labels = [], pages = [], timeHours = [], days = [], label = "";
@@ -713,7 +931,7 @@ function getPeriodInfo() {
         const endDate = new Date(monday);
         endDate.setDate(monday.getDate() + 6);
         label = monday.getDate() + " " + IT_MON_S[monday.getMonth()]
-              + "  " + endDate.getDate() + " " + IT_MON_S[endDate.getMonth()]
+              + " – " + endDate.getDate() + " " + IT_MON_S[endDate.getMonth()]
               + " " + endDate.getFullYear();
 
     } else if (statsMode === "month") {
@@ -910,14 +1128,14 @@ function saveEditRow(key) {
     saveDailyData(allData);
     refreshStats();
     const btn = document.querySelector(`[onclick="saveEditRow('${key}')"]`);
-    if (btn) { btn.textContent = ""; setTimeout(() => btn.textContent = "Salva", 1400); }
+    if (btn) { btn.textContent = "✓"; setTimeout(() => btn.textContent = "Salva", 1400); }
 }
 
 /* =============================================
    INIT
    ============================================= */
 
-// Inizializza l'autenticazione
+// Inizializza l'autenticazione e la data
 checkAuthOnStart();
 
 rebuildBoxes();
