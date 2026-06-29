@@ -29,13 +29,11 @@
 <div class="app-container">
 
     <div class="header-row">
-        <button class="login-btn" id="loginBtn" onclick="toggleLoginModal()">Accedi</button>
-        <div class="user-info" id="userInfo" style="display: none;">
-            <span id="userEmail"></span>
-            <button class="logout-btn" onclick="logout()">Esci</button>
-        </div>
         <h1>Produttività</h1>
-        <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
+        <div class="header-controls">
+            <button class="menu-btn" id="menuBtn" onclick="toggleSettingsMenu()">Menù</button>
+            <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
+        </div>
     </div>
 
     <div class="main-content">
@@ -122,6 +120,39 @@
 
     </div>
 
+</div>
+
+<!-- Settings Menu Modal -->
+<div class="modal-overlay modal-overlay--hidden" id="settingsModal">
+    <div class="modal-content settings-modal-content">
+        <div class="modal-header">
+            <h2>Impostazioni</h2>
+            <button class="modal-close" onclick="closeSettingsMenu()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-section">
+                <h3>Account</h3>
+                <div class="user-info-setting" id="userInfoSetting">
+                    <p>Non sei loggato</p>
+                    <button class="form-btn form-btn--primary" onclick="showLoginFromSettings()">Accedi / Registrati</button>
+                </div>
+                <div id="loggedInUserInfo" style="display: none;">
+                    <p>Loggato come: <span id="settingsUserEmail"></span></p>
+                    <button class="form-btn form-btn--secondary" onclick="logout()">Esci</button>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Data</h3>
+                <div class="form-group">
+                    <label for="customDate">Imposta data manualmente:</label>
+                    <input type="date" id="customDate" class="form-input" onchange="setCustomDate()">
+                </div>
+                <button class="form-btn form-btn--secondary" onclick="resetToToday()">Reimposta a oggi</button>
+                <p class="date-info">Data corrente: <span id="currentDateDisplay"></span></p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Login Modal -->
