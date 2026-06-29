@@ -30,7 +30,7 @@
 
     <div class="header-row">
         <h1>Produttività</h1>
-        <div class="header-controls"><button class="menu-btn" onclick="toggleSettingsMenu()">Menù</button><button class="stats-open-btn" onclick="openStats()">Statistiche</button></div>
+        <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
     </div>
 
     <div class="main-content">
@@ -164,29 +164,6 @@
     </div>
 </div>
 
-
-<!-- Settings Menu Modal -->
-<div class="modal-overlay modal-overlay--hidden" id="settingsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Impostazioni</h2>
-            <button class="modal-close" onclick="closeSettingsMenu()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="settings-section">
-                <button class="form-btn form-btn--primary" onclick="alert('Funzionalità account non ancora implementata')">Accedi al proprio account</button>
-            </div>
-            <div class="settings-section">
-                <div class="form-group">
-                    <label for="customDate">Imposta data di oggi:</label>
-                    <input type="date" id="customDate" class="form-input" onchange="setCustomDate()">
-                </div>
-                <button class="form-btn form-btn--secondary" onclick="resetToToday()">Reimposta a oggi</button>
-                <p class="date-info">Data corrente: <span id="currentDateDisplay"></span></p>
-            </div>
-        </div>
-    </div>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="script.js"></script>

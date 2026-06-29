@@ -34,198 +34,6 @@ function setCounterDisplay(val) {
    TRACCIAMENTO DATI GIORNALIERI
    ============================================= */
 
-
-/* =============================================
-   GESTIONE DATA PERSONALIZZATA E MENÙ IMPOSTAZIONI
-   ============================================= */
-
-// Variabili per la gestione della data personalizzata
-let customDate = null; // null = usa la data di oggi, altrimenti stringa nel formato YYYY-MM-DD
-const CUSTOM_DATE_KEY = "studio_custom_date";
-
-// Ottieni la data corrente (o quella personalizzata)
-function getCurrentDate() {
-    if (customDate) {
-        return new Date(customDate + "T00:00:00");
-    }
-    return new Date();
-}
-
-// SOVRASCRIVE la funzione getTodayKey per usare la data personalizzata
-function getTodayKey() {
-    const today = getCurrentDate();
-    today.setHours(0, 0, 0, 0);
-    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Imposta una data personalizzata
-function setCustomDate() {
-    const dateInput = document.getElementById("customDate");
-    const selectedDate = dateInput.value;
-    
-    if (!selectedDate) {
-        alert("Seleziona una data valida");
-        return;
-    }
-    
-    // Salva la data personalizzata
-    customDate = selectedDate;
-    localStorage.setItem(CUSTOM_DATE_KEY, customDate);
-    
-    // Salva i dati correnti per la data di oggi (se non è già la data selezionata)
-    const oldTodayKey = getTodayKey();
-    const oldDate = getCurrentDate();
-    oldDate.setHours(0, 0, 0, 0);
-    const oldDateKey = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
-    
-    if (oldDateKey !== customDate && (total > 0 || totalStudySeconds > 0)) {
-        // Salva i dati nella vecchia data
-        saveDataForDate(oldDateKey);
-    }
-    
-    // Reimposta i dati per la nuova data
-    loadDataForDate(customDate);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Reimposta alla data di oggi
-function resetToToday() {
-    customDate = null;
-    localStorage.removeItem(CUSTOM_DATE_KEY);
-    
-    // Salva i dati per la data personalizzata precedente
-    const oldTodayKey = getTodayKey();
-    if (oldTodayKey && (total > 0 || totalStudySeconds > 0)) {
-        saveDataForDate(oldTodayKey);
-    }
-    
-    // Carica i dati per oggi
-    loadDataForDate(null);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    document.getElementById("customDate").value = "";
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Salva i dati per una specifica data
-function saveDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    if (!allData[dateKey]) {
-        allData[dateKey] = { pages: 0, seconds: 0 };
-    }
-    allData[dateKey].pages = total;
-    allData[dateKey].seconds = totalStudySeconds;
-    saveDailyData(allData);
-}
-
-// Carica i dati per una specifica data
-function loadDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    const key = dateKey || getTodayKey();
-    const data = allData[key] || { pages: 0, seconds: 0 };
-    
-    total = data.pages || 0;
-    totalStudySeconds = data.seconds || 0;
-    
-    // Salva nei localStorage correnti
-    localStorage.setItem("total", total);
-    localStorage.setItem("totalStudySeconds", totalStudySeconds);
-}
-
-// Aggiorna il display della data corrente
-function updateCurrentDateDisplay() {
-    const currentDate = getCurrentDate();
-    const dateEl = document.getElementById("currentDateDisplay");
-    if (dateEl) {
-        const day = currentDate.getDate();
-        const month = currentDate.getMonth() + 1;
-        const year = currentDate.getFullYear();
-        dateEl.textContent = `${day}/${month}/${year}`;
-    }
-    
-    // Aggiorna anche il valore dell'input date
-    const dateInput = document.getElementById("customDate");
-    if (dateInput) {
-        if (customDate) {
-            dateInput.value = customDate;
-        } else {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            dateInput.value = today.toISOString().slice(0, 10);
-        }
-    }
-}
-
-// Controlla se è mezzanotte e resetta i dati
-function checkMidnightReset() {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // Se è tra la mezzanotte e l'1:00 AM
-    if (hours === 0 && minutes < 5) {
-        // Salva i dati del giorno precedente
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-        
-        // Salva solo se ci sono dati da salvare
-        if (total > 0 || totalStudySeconds > 0) {
-            saveDataForDate(yesterdayKey);
-        }
-        
-        // Resetta i dati per il nuovo giorno
-        total = 0;
-        totalStudySeconds = 0;
-        localStorage.setItem("total", "0");
-        localStorage.setItem("totalStudySeconds", "0");
-        
-        // Aggiorna l'interfaccia
-        // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
-        render();
-        updateTotalTime();
-        updateSpeed();
-    }
-}
-
-// Controlla la mezzanotte periodicamente
-setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
-
-/* =============================================
-   FUNZIONI MENÙ IMPOSTAZIONI
-   ============================================= */
-
-// Mostra il menù delle impostazioni
-function toggleSettingsMenu() {
-    const modal = document.getElementById("settingsModal");
-    modal.classList.toggle("modal-overlay--hidden");
-    updateCurrentDateDisplay();
-}
-
-// Chiudi il menù delle impostazioni
-function closeSettingsMenu() {
-    document.getElementById("settingsModal").classList.add("modal-overlay--hidden");
-}
-
 function getTodayKey() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -411,13 +219,7 @@ function confettiBurst() {
 
 function addChocolate() {
     total++;
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     const cur = boxes[boxes.length - 1];
     lastAddedIndex = cur.length - 1;
     if (total > 10 && total % 10 === 1) animateNewCompleted = true;
@@ -431,13 +233,7 @@ rebuildBoxes();
 function removeChocolate() {
     if (total <= 0) return;
     total--;
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     recordTodayPages(-1);
     render();
 }
@@ -455,13 +251,7 @@ function applyManualTotal() {
     const delta    = newTotal - total;
     total = newTotal;
     manualInput = "";
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     if (delta !== 0) recordTodayPages(delta);
     render();
 }
@@ -847,12 +637,6 @@ function saveEditRow(key) {
 /* =============================================
    INIT
    ============================================= */
-
-// Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
 
 rebuildBoxes();
 render();
