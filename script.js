@@ -35,15 +35,24 @@ function setCounterDisplay(val) {
    ============================================= */
 
 function getTodayKey() {
-    return new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
+
 function getAllDailyData() {
     try { return JSON.parse(localStorage.getItem("dailyData") || "{}"); }
     catch { return {}; }
 }
+
 function saveDailyData(data) {
     localStorage.setItem("dailyData", JSON.stringify(data));
 }
+
 function recordTodayPages(delta) {
     const data = getAllDailyData();
     const key  = getTodayKey();
@@ -51,6 +60,7 @@ function recordTodayPages(delta) {
     data[key].pages = Math.max(0, (data[key].pages || 0) + delta);
     saveDailyData(data);
 }
+
 function recordTodaySeconds(delta) {
     const data = getAllDailyData();
     const key  = getTodayKey();
@@ -389,6 +399,14 @@ function changeStatsPeriod(dir) {
     refreshStats();
 }
 
+function getDateKey(date) {
+    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function getPeriodInfo() {
     const allData = getAllDailyData();
     const today   = new Date();
@@ -399,12 +417,13 @@ function getPeriodInfo() {
     if (statsMode === "week") {
         const dow    = today.getDay();
         const monday = new Date(today);
+        // Fix: calcolo corretto del lunedì (0=domenica, 1=lunedì, ecc.)
         monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + statsOffset * 7);
 
         for (let i = 0; i < 7; i++) {
             const d   = new Date(monday);
             d.setDate(monday.getDate() + i);
-            const key   = d.toISOString().slice(0, 10);
+            const key   = getDateKey(d);
             const entry = allData[key] || { pages: 0, seconds: 0 };
             days.push(key);
             labels.push(IT_DAYS[d.getDay()] + " " + d.getDate());
@@ -424,7 +443,7 @@ function getPeriodInfo() {
 
         for (let i = 1; i <= daysInMon; i++) {
             const d     = new Date(ref.getFullYear(), ref.getMonth(), i);
-            const key   = d.toISOString().slice(0, 10);
+            const key   = getDateKey(d);
             const entry = allData[key] || { pages: 0, seconds: 0 };
             days.push(key);
             labels.push(String(i));
@@ -441,7 +460,7 @@ function getPeriodInfo() {
             const mDays = [];
             for (let i = 1; i <= dim; i++) {
                 const d   = new Date(year, m, i);
-                const key = d.toISOString().slice(0, 10);
+                const key = getDateKey(d);
                 mDays.push(key);
                 const e   = allData[key] || { pages: 0, seconds: 0 };
                 mPg  += e.pages   || 0;
@@ -456,9 +475,30 @@ function getPeriodInfo() {
     }
 
     const totalPages = pages.reduce((a, b) => a + b, 0);
-    const totalSeconds = statsMode === "year"
+    
+    // Fix: includi anche il tempo corrente dello stopwatch e timer se sono in esecuzione
+    let currentSessionSeconds = 0;
+    if (stopwatchRunning) {
+        currentSessionSeconds += stopwatchSeconds;
+    }
+    if (timerRunning) {
+        // Aggiungi il tempo trascorso dal timer (tempo iniziale - tempo rimanente)
+        const initialTimerSeconds = (Number(document.getElementById("studyMinutes").value) || 25) * 60;
+        currentSessionSeconds += (initialTimerSeconds - timerSeconds);
+    }
+    
+    // Calcola il tempo totale dai dati salvati
+    const savedTotalSeconds = statsMode === "year"
         ? days.flat().reduce((s, k) => s + ((allData[k] || {}).seconds || 0), 0)
         : days.reduce((s, k) => s + ((allData[k] || {}).seconds || 0), 0);
+    
+    // Aggiungi il tempo della sessione corrente solo per il giorno di oggi
+    const todayKey = getTodayKey();
+    const isTodayInPeriod = statsMode === "year" 
+        ? days.flat().includes(todayKey)
+        : days.includes(todayKey);
+    
+    const totalSeconds = isTodayInPeriod ? savedTotalSeconds + currentSessionSeconds : savedTotalSeconds;
 
     return { labels, pages, timeHours, days, label, totalPages, totalSeconds };
 }
