@@ -12,11 +12,8 @@ const chocolates = [
 const lidImage = 'https://i.ibb.co/PGZv7Nnw/IMG-3743.png';
 const MAX = 10;
 
-// Variabili per la gestione della data personalizzata
-let customDate = null; // null = usa la data di oggi, altrimenti stringa nel formato YYYY-MM-DD
-const CUSTOM_DATE_KEY = "studio_custom_date";
-
 let total        = Number(localStorage.getItem("total")) || 0;
+let totalStudySeconds = Number(localStorage.getItem("totalStudySeconds")) || 0;
 let boxes        = [];
 let manualInput  = "";
 let lastAddedIndex    = -1;
@@ -35,694 +32,18 @@ function setCounterDisplay(val) {
 }
 
 /* =============================================
-   GESTIONE DATA PERSONALIZZATA
-   ============================================= */
-
-
-/* =============================================
-   GESTIONE DATA PERSONALIZZATA E MENÙ IMPOSTAZIONI
-   ============================================= */
-
-// Variabili per la gestione della data personalizzata
-let customDate = null; // null = usa la data di oggi, altrimenti stringa nel formato YYYY-MM-DD
-const CUSTOM_DATE_KEY = "studio_custom_date";
-
-// Ottieni la data corrente (o quella personalizzata)
-function getCurrentDate() {
-    if (customDate) {
-        return new Date(customDate + "T00:00:00");
-    }
-    return new Date();
-}
-
-// SOVRASCRIVE la funzione getTodayKey per usare la data personalizzata
-function getTodayKey() {
-    const today = getCurrentDate();
-    today.setHours(0, 0, 0, 0);
-    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Imposta una data personalizzata
-function setCustomDate() {
-    const dateInput = document.getElementById("customDate");
-    const selectedDate = dateInput.value;
-    
-    if (!selectedDate) {
-        alert("Seleziona una data valida");
-        return;
-    }
-    
-    // Salva la data personalizzata
-    customDate = selectedDate;
-    localStorage.setItem(CUSTOM_DATE_KEY, customDate);
-    
-    // Salva i dati correnti per la data di oggi (se non è già la data selezionata)
-    const oldTodayKey = getTodayKey();
-    const oldDate = getCurrentDate();
-    oldDate.setHours(0, 0, 0, 0);
-    const oldDateKey = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
-    
-    if (oldDateKey !== customDate && (total > 0 || totalStudySeconds > 0)) {
-        // Salva i dati nella vecchia data
-        saveDataForDate(oldDateKey);
-    }
-    
-    // Reimposta i dati per la nuova data
-    loadDataForDate(customDate);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Reimposta alla data di oggi
-function resetToToday() {
-    customDate = null;
-    localStorage.removeItem(CUSTOM_DATE_KEY);
-    
-    // Salva i dati per la data personalizzata precedente
-    const oldTodayKey = getTodayKey();
-    if (oldTodayKey && (total > 0 || totalStudySeconds > 0)) {
-        saveDataForDate(oldTodayKey);
-    }
-    
-    // Carica i dati per oggi
-    loadDataForDate(null);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    document.getElementById("customDate").value = "";
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Salva i dati per una specifica data
-function saveDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    if (!allData[dateKey]) {
-        allData[dateKey] = { pages: 0, seconds: 0 };
-    }
-    allData[dateKey].pages = total;
-    allData[dateKey].seconds = totalStudySeconds;
-    saveDailyData(allData);
-}
-
-// Carica i dati per una specifica data
-function loadDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    const key = dateKey || getTodayKey();
-    const data = allData[key] || { pages: 0, seconds: 0 };
-    
-    total = data.pages || 0;
-    totalStudySeconds = data.seconds || 0;
-    
-    // Salva nei localStorage correnti
-    localStorage.setItem("total", total);
-    localStorage.setItem("totalStudySeconds", totalStudySeconds);
-}
-
-// Aggiorna il display della data corrente
-function updateCurrentDateDisplay() {
-    const currentDate = getCurrentDate();
-    const dateEl = document.getElementById("currentDateDisplay");
-    if (dateEl) {
-        const day = currentDate.getDate();
-        const month = currentDate.getMonth() + 1;
-        const year = currentDate.getFullYear();
-        dateEl.textContent = `${day}/${month}/${year}`;
-    }
-    
-    // Aggiorna anche il valore dell'input date
-    const dateInput = document.getElementById("customDate");
-    if (dateInput) {
-        if (customDate) {
-            dateInput.value = customDate;
-        } else {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            dateInput.value = today.toISOString().slice(0, 10);
-        }
-    }
-}
-
-// Controlla se è mezzanotte e resetta i dati
-function checkMidnightReset() {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // Se è tra la mezzanotte e l'1:00 AM
-    if (hours === 0 && minutes < 5) {
-        // Salva i dati del giorno precedente
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-        
-        // Salva solo se ci sono dati da salvare
-        if (total > 0 || totalStudySeconds > 0) {
-            saveDataForDate(yesterdayKey);
-        }
-        
-        // Resetta i dati per il nuovo giorno
-        total = 0;
-        totalStudySeconds = 0;
-        localStorage.setItem("total", "0");
-        localStorage.setItem("totalStudySeconds", "0");
-        
-        // Aggiorna l'interfaccia
-        // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
-        render();
-        updateTotalTime();
-        updateSpeed();
-    }
-}
-
-// Controlla la mezzanotte periodicamente
-setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
-
-/* =============================================
-   FUNZIONI MENÙ IMPOSTAZIONI
-   ============================================= */
-
-// Mostra il menù delle impostazioni
-function toggleSettingsMenu() {
-    const modal = document.getElementById("settingsModal");
-    modal.classList.toggle("modal-overlay--hidden");
-    updateCurrentDateDisplay();
-}
-
-// Chiudi il menù delle impostazioni
-function closeSettingsMenu() {
-    document.getElementById("settingsModal").classList.add("modal-overlay--hidden");
-}
-
-// Ottieni la chiave del giorno corrente (o personalizzato)
-function getTodayKey() {
-    const today = getCurrentDate();
-    today.setHours(0, 0, 0, 0);
-    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Imposta una data personalizzata
-function setCustomDate() {
-    const dateInput = document.getElementById("customDate");
-    const selectedDate = dateInput.value;
-    
-    if (!selectedDate) {
-        alert("Seleziona una data valida");
-        return;
-    }
-    
-    // Salva la data personalizzata
-    customDate = selectedDate;
-    localStorage.setItem(CUSTOM_DATE_KEY, customDate);
-    
-    // Salva i dati correnti per la data di oggi (se non è già la data selezionata)
-    const oldTodayKey = getTodayKey();
-    const oldDate = getCurrentDate();
-    oldDate.setHours(0, 0, 0, 0);
-    const oldDateKey = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
-    
-    if (oldDateKey !== customDate && (total > 0 || totalStudySeconds > 0)) {
-        // Salva i dati nella vecchia data
-        saveDataForDate(oldDateKey);
-    }
-    
-    // Reimposta i dati per la nuova data
-    loadDataForDate(customDate);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Reimposta alla data di oggi
-function resetToToday() {
-    customDate = null;
-    localStorage.removeItem(CUSTOM_DATE_KEY);
-    
-    // Salva i dati per la data personalizzata precedente
-    const oldTodayKey = getTodayKey();
-    if (oldTodayKey && (total > 0 || totalStudySeconds > 0)) {
-        saveDataForDate(oldTodayKey);
-    }
-    
-    // Carica i dati per oggi
-    loadDataForDate(null);
-    
-    // Aggiorna l'interfaccia
-    updateCurrentDateDisplay();
-    document.getElementById("customDate").value = "";
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Salva i dati per una specifica data
-function saveDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    if (!allData[dateKey]) {
-        allData[dateKey] = { pages: 0, seconds: 0 };
-    }
-    allData[dateKey].pages = total;
-    allData[dateKey].seconds = totalStudySeconds;
-    saveDailyData(allData);
-}
-
-// Carica i dati per una specifica data
-function loadDataForDate(dateKey) {
-    const allData = getAllDailyData();
-    const key = dateKey || getTodayKey();
-    const data = allData[key] || { pages: 0, seconds: 0 };
-    
-    total = data.pages || 0;
-    totalStudySeconds = data.seconds || 0;
-    
-    // Salva nei localStorage correnti
-    localStorage.setItem("total", total);
-    localStorage.setItem("totalStudySeconds", totalStudySeconds);
-}
-
-// Aggiorna il display della data corrente
-function updateCurrentDateDisplay() {
-    const currentDate = getCurrentDate();
-    const dateEl = document.getElementById("currentDateDisplay");
-    if (dateEl) {
-        const day = currentDate.getDate();
-        const month = currentDate.getMonth() + 1;
-        const year = currentDate.getFullYear();
-        dateEl.textContent = `${day}/${month}/${year}`;
-    }
-    
-    // Aggiorna anche il valore dell'input date
-    const dateInput = document.getElementById("customDate");
-    if (dateInput) {
-        if (customDate) {
-            dateInput.value = customDate;
-        } else {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            dateInput.value = today.toISOString().slice(0, 10);
-        }
-    }
-}
-
-// Controlla se è mezzanotte e resetta i dati
-function checkMidnightReset() {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // Se è tra la mezzanotte e l'1:00 AM
-    if (hours === 0 && minutes < 5) {
-        // Salva i dati del giorno precedente
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-        
-        // Salva solo se ci sono dati da salvare
-        if (total > 0 || totalStudySeconds > 0) {
-            saveDataForDate(yesterdayKey);
-        }
-        
-        // Resetta i dati per il nuovo giorno
-        total = 0;
-        totalStudySeconds = 0;
-        localStorage.setItem("total", "0");
-        localStorage.setItem("totalStudySeconds", "0");
-        
-        // Aggiorna l'interfaccia
-        rebuildBoxes();
-        render();
-        updateTotalTime();
-        updateSpeed();
-    }
-}
-
-// Controlla la mezzanotte periodicamente
-setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
-
-/* =============================================
-   SISTEMA DI AUTENTICAZIONE
-   ============================================= */
-
-// Chiave per salvare gli utenti in localStorage
-const USERS_STORAGE_KEY = "studio_users";
-const CURRENT_USER_KEY = "studio_current_user";
-
-// Ottieni tutti gli utenti
-function getAllUsers() {
-    try {
-        return JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || "{}");
-    } catch {
-        return {};
-    }
-}
-
-// Salva tutti gli utenti
-function saveAllUsers(users) {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-}
-
-// Ottieni l'utente corrente
-function getCurrentUser() {
-    try {
-        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null");
-    } catch {
-        return null;
-    }
-}
-
-// Salva l'utente corrente
-function saveCurrentUser(user) {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-}
-
-// Rimuovi l'utente corrente (logout)
-function clearCurrentUser() {
-    localStorage.removeItem(CURRENT_USER_KEY);
-}
-
-// Hash semplice per la password (non crittografico, solo per demo)
-function simpleHash(password) {
-    let hash = 0;
-    for (let i = 0; i < password.length; i++) {
-        const char = password.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString();
-}
-
-// Mostra il menù delle impostazioni
-function toggleSettingsMenu() {
-    const modal = document.getElementById("settingsModal");
-    modal.classList.toggle("modal-overlay--hidden");
-    
-    // Aggiorna le informazioni utente nel menù
-    updateSettingsUserInfo();
-    updateCurrentDateDisplay();
-}
-
-// Chiudi il menù delle impostazioni
-function closeSettingsMenu() {
-    document.getElementById("settingsModal").classList.add("modal-overlay--hidden");
-}
-
-// Mostra il modulo di login dal menù delle impostazioni
-function showLoginFromSettings() {
-    closeSettingsMenu();
-    toggleLoginModal();
-}
-
-// Aggiorna le informazioni utente nel menù delle impostazioni
-function updateSettingsUserInfo() {
-    const user = getCurrentUser();
-    const userInfoSetting = document.getElementById("userInfoSetting");
-    const loggedInUserInfo = document.getElementById("loggedInUserInfo");
-    const settingsUserEmail = document.getElementById("settingsUserEmail");
-    
-    if (user) {
-        userInfoSetting.style.display = "none";
-        loggedInUserInfo.style.display = "block";
-        settingsUserEmail.textContent = user.name || user.email;
-    } else {
-        userInfoSetting.style.display = "block";
-        loggedInUserInfo.style.display = "none";
-    }
-}
-
-// Mostra il modulo di login
-function toggleLoginModal() {
-    const user = getCurrentUser();
-    if (user) {
-        // Se già loggato, mostra il menu utente
-        return;
-    }
-    document.getElementById("loginModal").classList.remove("modal-overlay--hidden");
-    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
-    document.getElementById("loginError").textContent = "";
-}
-
-// Chiudi il modulo di login
-function closeLoginModal() {
-    document.getElementById("loginModal").classList.add("modal-overlay--hidden");
-}
-
-// Mostra il modulo di registrazione
-function showRegister() {
-    document.getElementById("loginModal").classList.add("modal-overlay--hidden");
-    document.getElementById("registerModal").classList.remove("modal-overlay--hidden");
-    document.getElementById("registerError").textContent = "";
-}
-
-// Chiudi il modulo di registrazione
-function closeRegisterModal() {
-    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
-}
-
-// Mostra il modulo di login
-function showLogin() {
-    document.getElementById("registerModal").classList.add("modal-overlay--hidden");
-    document.getElementById("loginModal").classList.remove("modal-overlay--hidden");
-    document.getElementById("loginError").textContent = "";
-}
-
-// Funzione di login
-function login(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    const errorEl = document.getElementById("loginError");
-    
-    if (!email || !password) {
-        errorEl.textContent = "Inserisci email e password";
-        return;
-    }
-    
-    const users = getAllUsers();
-    const user = users[email];
-    
-    if (!user) {
-        errorEl.textContent = "Utente non trovato";
-        return;
-    }
-    
-    if (user.passwordHash !== simpleHash(password)) {
-        errorEl.textContent = "Password errata";
-        return;
-    }
-    
-    // Login successful
-    saveCurrentUser({ email, name: user.name || email });
-    updateUserUI();
-    closeLoginModal();
-    
-    // Carica i dati dell'utente
-    loadUserData();
-}
-
-// Funzione di registrazione
-function register(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById("registerEmail").value.trim();
-    const password = document.getElementById("registerPassword").value;
-    const confirmPassword = document.getElementById("registerConfirmPassword").value;
-    const errorEl = document.getElementById("registerError");
-    
-    if (!email || !password) {
-        errorEl.textContent = "Inserisci email e password";
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        errorEl.textContent = "Le password non corrispondono";
-        return;
-    }
-    
-    if (password.length < 6) {
-        errorEl.textContent = "La password deve essere di almeno 6 caratteri";
-        return;
-    }
-    
-    const users = getAllUsers();
-    
-    if (users[email]) {
-        errorEl.textContent = "Utente già registrato";
-        return;
-    }
-    
-    // Registrazione successful
-    users[email] = {
-        email: email,
-        passwordHash: simpleHash(password),
-        name: email.split('@')[0],
-        createdAt: new Date().toISOString()
-    };
-    
-    saveAllUsers(users);
-    
-    // Auto-login
-    saveCurrentUser({ email, name: email.split('@')[0] });
-    updateUserUI();
-    closeRegisterModal();
-    
-    // Crea spazio dati per il nuovo utente
-    saveUserData();
-}
-
-// Aggiorna l'interfaccia utente in base allo stato di login
-function updateUserUI() {
-    const user = getCurrentUser();
-    const loginBtn = document.getElementById("loginBtn");
-    const userInfo = document.getElementById("userInfo");
-    const userEmail = document.getElementById("userEmail");
-    
-    if (user) {
-        if (loginBtn) loginBtn.style.display = "none";
-        if (userInfo) userInfo.style.display = "flex";
-        if (userEmail) userEmail.textContent = user.name || user.email;
-    } else {
-        if (loginBtn) loginBtn.style.display = "block";
-        if (userInfo) userInfo.style.display = "none";
-    }
-    
-    // Aggiorna anche nel menù delle impostazioni
-    updateSettingsUserInfo();
-}
-
-// Funzione di logout
-function logout() {
-    // Salva i dati corrente nell'account utente prima di disconnettersi
-    saveUserData();
-    
-    clearCurrentUser();
-    updateUserUI();
-    
-    // Reimposta i dati locali
-    resetToDefaultData();
-}
-
-// Salva i dati dell'utente corrente
-function saveUserData() {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    const users = getAllUsers();
-    const userEmail = user.email;
-    
-    // Crea o aggiorna i dati dell'utente
-    if (!users[userEmail].data) {
-        users[userEmail].data = {};
-    }
-    
-    // Salva tutti i dati correnti
-    const currentDateKey = getTodayKey();
-    users[userEmail].data[currentDateKey] = {
-        total: total,
-        totalStudySeconds: totalStudySeconds,
-        lastUpdate: new Date().toISOString()
-    };
-    
-    // Salva anche i dati giornalieri
-    users[userEmail].dailyData = getAllDailyData();
-    
-    saveAllUsers(users);
-}
-
-// Carica i dati dell'utente corrente
-function loadUserData() {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    const users = getAllUsers();
-    const userData = users[user.email];
-    
-    if (userData && userData.dailyData) {
-        // Carica i dati giornalieri
-        saveDailyData(userData.dailyData);
-        
-        // Carica i dati per la data corrente
-        const currentDateKey = getTodayKey();
-        const dateData = userData.data?.[currentDateKey];
-        
-        if (dateData) {
-            total = dateData.total || 0;
-            totalStudySeconds = dateData.totalStudySeconds || 0;
-            
-            // Salva nei localStorage correnti
-            localStorage.setItem("total", total);
-            localStorage.setItem("totalStudySeconds", totalStudySeconds);
-        }
-        
-        // Ricarica l'interfaccia
-        rebuildBoxes();
-        render();
-        updateTotalTime();
-        updateSpeed();
-    }
-}
-
-// Reimposta ai dati predefiniti (per utente non loggato)
-function resetToDefaultData() {
-    total = 0;
-    totalStudySeconds = 0;
-    saveDailyData({});
-    localStorage.setItem("total", "0");
-    localStorage.setItem("totalStudySeconds", "0");
-    
-    rebuildBoxes();
-    render();
-    updateTotalTime();
-    updateSpeed();
-}
-
-// Controlla l'autenticazione all'avvio
-function checkAuthOnStart() {
-    const user = getCurrentUser();
-    if (user) {
-        updateUserUI();
-        loadUserData();
-    } else {
-        updateUserUI();
-    }
-    
-    // Controlla se c'è una data personalizzata salvata
-    const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-    if (savedCustomDate) {
-        customDate = savedCustomDate;
-    }
-    
-    // Aggiorna il display della data
-    updateCurrentDateDisplay();
-}
-
-/* =============================================
    TRACCIAMENTO DATI GIORNALIERI
    ============================================= */
+
+function getTodayKey() {
+    const today = getCurrentDate();
+    today.setHours(0, 0, 0, 0);
+    // Usa formato YYYY-MM-DD locale per evitare problemi di timezone
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 function getAllDailyData() {
     try { return JSON.parse(localStorage.getItem("dailyData") || "{}"); }
@@ -731,8 +52,6 @@ function getAllDailyData() {
 
 function saveDailyData(data) {
     localStorage.setItem("dailyData", JSON.stringify(data));
-    // Salva anche nei dati utente se loggato
-    saveUserData();
 }
 
 function recordTodayPages(delta) {
@@ -764,7 +83,7 @@ function rebuildBoxes() {
     }
 }
 
-function save() { localStorage.setItem("total", total); }
+function save() { localStorage.setItem("total", total); localStorage.setItem("totalStudySeconds", totalStudySeconds); }
 
 function createSlot(data, index, isNew = false) {
     const slot = document.createElement("div");
@@ -901,13 +220,7 @@ function confettiBurst() {
 
 function addChocolate() {
     total++;
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     const cur = boxes[boxes.length - 1];
     lastAddedIndex = cur.length - 1;
     if (total > 10 && total % 10 === 1) animateNewCompleted = true;
@@ -921,13 +234,7 @@ rebuildBoxes();
 function removeChocolate() {
     if (total <= 0) return;
     total--;
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     recordTodayPages(-1);
     render();
 }
@@ -945,13 +252,7 @@ function applyManualTotal() {
     const delta    = newTotal - total;
     total = newTotal;
     manualInput = "";
-    // Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-
-rebuildBoxes();
+    rebuildBoxes();
     if (delta !== 0) recordTodayPages(delta);
     render();
 }
@@ -1108,7 +409,7 @@ function getDateKey(date) {
 
 function getPeriodInfo() {
     const allData = getAllDailyData();
-    const today   = getCurrentDate();
+    const today   = new Date();
     today.setHours(0, 0, 0, 0);
 
     let labels = [], pages = [], timeHours = [], days = [], label = "";
@@ -1333,21 +634,418 @@ function saveEditRow(key) {
     if (btn) { btn.textContent = "✓"; setTimeout(() => btn.textContent = "Salva", 1400); }
 }
 
+
+/* =============================================
+   GESTIONE UTENTI E AUTENTICAZIONE
+   ============================================= */
+
+// Chiave per salvare l'utente corrente
+const CURRENT_USER_KEY = "currentUser";
+const USERS_KEY = "appUsers";
+const CUSTOM_DATE_KEY = "customDate";
+
+// Utente corrente
+let currentUser = null;
+let customDate = null;
+
+// Inizializza l'utente corrente all'avvio
+function initUser() {
+    const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+    if (savedUser) {
+        try {
+            currentUser = JSON.parse(savedUser);
+        } catch (e) {
+            console.error("Errore nel caricamento dell'utente:", e);
+        }
+    }
+    
+    const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
+    if (savedCustomDate) {
+        customDate = savedCustomDate;
+    }
+}
+
+// Ottieni tutti gli utenti
+function getAllUsers() {
+    try {
+        return JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
+    } catch {
+        return {};
+    }
+}
+
+// Salva tutti gli utenti
+function saveAllUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+// Ottieni l'utente corrente
+function getCurrentUser() {
+    return currentUser;
+}
+
+// Hash semplice per la password (non sicuro per produzione, ma sufficiente per demo)
+function hashPassword(password) {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+}
+
+// Registrazione
+function register(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById("registerName").value.trim();
+    const email = document.getElementById("registerEmail").value.trim().toLowerCase();
+    const password = document.getElementById("registerPassword").value;
+    const errorEl = document.getElementById("registerError");
+    
+    if (!email || !password) {
+        errorEl.textContent = "Inserisci email e password";
+        return;
+    }
+    
+    const users = getAllUsers();
+    
+    if (users[email]) {
+        errorEl.textContent = "Utente già registrato";
+        return;
+    }
+    
+    // Crea nuovo utente
+    const hashedPassword = hashPassword(password);
+    users[email] = {
+        email: email,
+        name: name || email.split("@")[0],
+        password: hashedPassword,
+        createdAt: new Date().toISOString()
+    };
+    
+    saveAllUsers(users);
+    
+    // Auto-login dopo la registrazione
+    currentUser = users[email];
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+    
+    errorEl.textContent = "";
+    closeRegisterModal();
+    updateSettingsUserInfo();
+    
+    // Sincronizza i dati con l'account
+    syncDataWithAccount();
+}
+
+// Login
+function login(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const password = document.getElementById("loginPassword").value;
+    const errorEl = document.getElementById("loginError");
+    
+    if (!email || !password) {
+        errorEl.textContent = "Inserisci email e password";
+        return;
+    }
+    
+    const users = getAllUsers();
+    const user = users[email];
+    
+    if (!user) {
+        errorEl.textContent = "Utente non trovato";
+        return;
+    }
+    
+    const hashedPassword = hashPassword(password);
+    if (user.password !== hashedPassword) {
+        errorEl.textContent = "Password errata";
+        return;
+    }
+    
+    // Login successful
+    currentUser = user;
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+    
+    errorEl.textContent = "";
+    closeLoginModal();
+    updateSettingsUserInfo();
+    
+    // Sincronizza i dati con l'account
+    syncDataWithAccount();
+}
+
+// Logout
+function logout() {
+    currentUser = null;
+    localStorage.removeItem(CURRENT_USER_KEY);
+    updateSettingsUserInfo();
+    
+    // Nascondi i dati specifici dell'utente
+    // I dati locali rimangono, ma non sono sincronizzati con l'account
+}
+
+// Sincronizza i dati con l'account
+function syncDataWithAccount() {
+    if (!currentUser) return;
+    
+    // Salva i dati locali nell'account
+    const userDataKey = `userData_${currentUser.email}`;
+    const userData = {
+        total: total,
+        totalStudySeconds: totalStudySeconds,
+        dailyData: getAllDailyData(),
+        lastSync: new Date().toISOString()
+    };
+    localStorage.setItem(userDataKey, JSON.stringify(userData));
+    
+    // Carica i dati dall'account (se presenti)
+    const savedUserData = localStorage.getItem(userDataKey);
+    if (savedUserData) {
+        try {
+            const data = JSON.parse(savedUserData);
+            // Non sovrascrivere i dati correnti automaticamente
+            // L'utente può decidere di sincronizzare manualmente
+        } catch (e) {
+            console.error("Errore nel caricamento dei dati utente:", e);
+        }
+    }
+}
+
+// Aggiorna le informazioni utente nel menù delle impostazioni
+function updateSettingsUserInfo() {
+    const user = getCurrentUser();
+    const userInfoSetting = document.getElementById("userInfoSetting");
+    const loggedInUserInfo = document.getElementById("loggedInUserInfo");
+    const settingsUserEmail = document.getElementById("settingsUserEmail");
+    
+    if (user) {
+        if (userInfoSetting) userInfoSetting.style.display = "none";
+        if (loggedInUserInfo) loggedInUserInfo.style.display = "block";
+        if (settingsUserEmail) settingsUserEmail.textContent = user.name || user.email;
+    } else {
+        if (userInfoSetting) userInfoSetting.style.display = "block";
+        if (loggedInUserInfo) loggedInUserInfo.style.display = "none";
+    }
+}
+
+/* =============================================
+   FUNZIONI MENÙ IMPOSTAZIONI
+   ============================================= */
+
+// Mostra il menù delle impostazioni
+function toggleSettingsMenu() {
+    const modal = document.getElementById("settingsModal");
+    if (modal) {
+        modal.classList.toggle("modal-overlay--hidden");
+        updateCurrentDateDisplay();
+        updateSettingsUserInfo();
+    }
+}
+
+// Chiudi il menù delle impostazioni
+function closeSettingsMenu() {
+    const modal = document.getElementById("settingsModal");
+    if (modal) modal.classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di login dal menù delle impostazioni
+function showLoginFromSettings() {
+    closeSettingsMenu();
+    toggleLoginModal();
+}
+
+// Mostra il modulo di login
+function toggleLoginModal() {
+    const user = getCurrentUser();
+    if (user) {
+        // Se già loggato, non mostrare il login
+        return;
+    }
+    const loginModal = document.getElementById("loginModal");
+    const registerModal = document.getElementById("registerModal");
+    if (loginModal) loginModal.classList.remove("modal-overlay--hidden");
+    if (registerModal) registerModal.classList.add("modal-overlay--hidden");
+    const errorEl = document.getElementById("loginError");
+    if (errorEl) errorEl.textContent = "";
+}
+
+// Chiudi il modulo di login
+function closeLoginModal() {
+    const modal = document.getElementById("loginModal");
+    if (modal) modal.classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di registrazione
+function showRegister() {
+    const loginModal = document.getElementById("loginModal");
+    const registerModal = document.getElementById("registerModal");
+    if (loginModal) loginModal.classList.add("modal-overlay--hidden");
+    if (registerModal) registerModal.classList.remove("modal-overlay--hidden");
+    const errorEl = document.getElementById("registerError");
+    if (errorEl) errorEl.textContent = "";
+}
+
+// Chiudi il modulo di registrazione
+function closeRegisterModal() {
+    const modal = document.getElementById("registerModal");
+    if (modal) modal.classList.add("modal-overlay--hidden");
+}
+
+// Mostra il modulo di login
+function showLogin() {
+    const registerModal = document.getElementById("registerModal");
+    const loginModal = document.getElementById("loginModal");
+    if (registerModal) registerModal.classList.add("modal-overlay--hidden");
+    if (loginModal) loginModal.classList.remove("modal-overlay--hidden");
+    const errorEl = document.getElementById("loginError");
+    if (errorEl) errorEl.textContent = "";
+}
+
+// Ottieni la data corrente (o personalizzata)
+function getCurrentDate() {
+    if (customDate) {
+        return new Date(customDate + "T00:00:00");
+    }
+    return new Date();
+}
+
+// Aggiorna il display della data corrente
+function updateCurrentDateDisplay() {
+    const dateEl = document.getElementById("currentDateDisplay");
+    if (!dateEl) return;
+    
+    const current = getCurrentDate();
+    const day = String(current.getDate()).padStart(2, '0');
+    const month = String(current.getMonth() + 1).padStart(2, '0');
+    const year = current.getFullYear();
+    dateEl.textContent = `${day}/${month}/${year}`;
+    
+    // Imposta il valore predefinito per l'input date
+    const dateInput = document.getElementById("customDate");
+    if (dateInput) {
+        dateInput.value = `${year}-${month}-${day}`;
+    }
+}
+
+// Imposta una data personalizzata
+function setCustomDate() {
+    const dateInput = document.getElementById("customDate");
+    const selectedDate = dateInput.value;
+    
+    if (!selectedDate) {
+        alert("Seleziona una data valida");
+        return;
+    }
+    
+    // Salva la data personalizzata
+    customDate = selectedDate;
+    localStorage.setItem(CUSTOM_DATE_KEY, customDate);
+    
+    // Salva i dati correnti per la data di oggi (se non è già la data selezionata)
+    const oldTodayKey = getTodayKey();
+    const oldDate = getCurrentDate();
+    oldDate.setHours(0, 0, 0, 0);
+    const oldDateKey = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
+    
+    if (oldDateKey !== customDate && (total > 0 || totalStudySeconds > 0)) {
+        // Salva i dati nella vecchia data
+        saveDataForDate(oldDateKey);
+    }
+    
+    // Reimposta i dati per la nuova data
+    loadDataForDate(customDate);
+    
+    closeSettingsMenu();
+}
+
+// Salva i dati per una data specifica
+function saveDataForDate(dateKey) {
+    const data = getAllDailyData();
+    if (!data[dateKey]) {
+        data[dateKey] = { pages: 0, seconds: 0 };
+    }
+    data[dateKey].pages = total;
+    data[dateKey].seconds = totalStudySeconds;
+    saveDailyData(data);
+}
+
+// Carica i dati per una data specifica
+function loadDataForDate(dateKey) {
+    const data = getAllDailyData();
+    const dateData = data[dateKey];
+    
+    if (dateData) {
+        total = dateData.pages || 0;
+        totalStudySeconds = dateData.seconds || 0;
+    } else {
+        total = 0;
+        totalStudySeconds = 0;
+    }
+    
+    // Aggiorna l'interfaccia
+    rebuildBoxes();
+    render();
+    updateTotalTime();
+    updateSpeed();
+    
+    // Salva i dati locali
+    save();
+    localStorage.setItem("totalStudySeconds", totalStudySeconds);
+}
+
+// Controlla se è mezzanotte e resetta i dati
+function checkMidnightReset() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    
+    // Se è tra la mezzanotte e l'1:00 AM
+    if (hours === 0 && minutes < 5) {
+        // Salva i dati del giorno precedente
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        
+        // Salva solo se ci sono dati da salvare
+        if (total > 0 || totalStudySeconds > 0) {
+            saveDataForDate(yesterdayKey);
+        }
+        
+        // Resetta i dati per il nuovo giorno
+        total = 0;
+        totalStudySeconds = 0;
+        localStorage.setItem("total", "0");
+        localStorage.setItem("totalStudySeconds", "0");
+        
+        // Reimposta la data personalizzata
+        customDate = null;
+        localStorage.removeItem(CUSTOM_DATE_KEY);
+        
+        // Aggiorna l'interfaccia
+        rebuildBoxes();
+        render();
+        updateTotalTime();
+        updateSpeed();
+    }
+}
+
+// Controlla la mezzanotte periodicamente
+setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
+
 /* =============================================
    INIT
    ============================================= */
 
-// Inizializza la data personalizzata all'avvio
-const savedCustomDate = localStorage.getItem(CUSTOM_DATE_KEY);
-if (savedCustomDate) {
-    customDate = savedCustomDate;
-}
-// Inizializza l'autenticazione e la data
-checkAuthOnStart();
-
+initUser();
 rebuildBoxes();
 render();
 updateStopwatch();
 updateTimer();
 updateTotalTime();
 updateSpeed();
+checkMidnightReset();
