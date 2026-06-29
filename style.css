@@ -1087,6 +1087,234 @@ h1 {
     .reset-total-btn:hover, .key:hover,
     .period-tab:hover, .nav-arrow:hover,
     .edit-toggle-btn:hover, .save-row-btn:hover,
+    .stats-open-btn:hover, .stat-close-btn:hover { transform: none; }
+}
+
+
+/* Stili per il menù delle impostazioni */
+.header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.menu-btn {
+    border: none;
+    padding: 8px 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.7);
+    color: #5c2c16;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: "DynaPuff", system-ui;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.menu-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+/* Modal stili */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    transition: 0.3s;
+}
+
+.modal-overlay--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-family: "Cherry Bomb One", system-ui;
+    font-size: 20px;
+    color: #5c2c16;
+}
+
+.modal-close {
+    border: none;
+    background: none;
+    color: #5c2c16;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: 0.2s;
+}
+
+.modal-close:hover {
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+}
+
+.settings-section h3 {
+    font-size: 14px;
+    color: #5c2c16;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 12px;
+    color: #5c2c16;
+    font-weight: 500;
+}
+
+.form-input {
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: "DynaPuff", system-ui;
+    color: #5c2c16;
+    transition: 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #e8749b;
+    box-shadow: 0 0 0 3px rgba(232, 116, 155, 0.1);
+}
+
+.form-input::placeholder {
+    color: #b0b0b0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.form-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "DynaPuff", system-ui;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-btn:hover {
+    transform: translateY(-2px);
+}
+
+.form-btn:active {
+    transform: translateY(0);
+}
+
+.form-btn--primary {
+    background: #e8749b;
+    color: white;
+}
+
+.form-btn--primary:hover {
+    background: #c44569;
+}
+
+.form-btn--secondary {
+    background: rgba(255,255,255,0.8);
+    color: #5c2c16;
+    border: 2px solid #e0e0e0;
+}
+
+.form-btn--secondary:hover {
+    background: white;
+    border-color: #e8749b;
+}
+
+.error-message {
+    color: #f44336;
+    font-size: 12px;
+    text-align: center;
+    padding: 8px;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 8px;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.date-info {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.date-info span {
+    font-weight: 600;
+    color: #5c2c16;
+}
+
+/* Responsive per modal */
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-btn {
+        width: 100%;
+    }
+}
     .stats-open-btn:hover, .stat-close-btn:hover,
     .menu-btn:hover, .form-btn:hover,
     .modal-close:hover { transform: none; }

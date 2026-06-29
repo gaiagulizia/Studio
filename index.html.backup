@@ -30,11 +30,7 @@
 
     <div class="header-row">
         <h1>Produttività</h1>
-        <div class="header-controls"><button class="menu-btn" onclick="toggleSettingsMenu()">Menù</button><button class="stats-open-btn" onclick="openStats()">Statistiche</button></div>
-        <div class="header-controls">
-            <button class="menu-btn" id="menuBtn" onclick="toggleSettingsMenu()">Menù</button>
-            <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
-        </div>
+        <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
     </div>
 
     <div class="main-content">
@@ -48,7 +44,7 @@
                             <div class="stopwatch-time" id="stopwatch">00:00</div>
                             <div class="stopwatch-controls">
                                 <button class="small-btn" onclick="toggleStopwatch()">Start / Stop</button>
-                                <button class="reset-total-btn" onclick="resetStopwatch()">↻</button>
+                                <button class="reset-total-btn" onclick="resetStopwatch()">↺</button>
                             </div>
                         </div>
                         <div class="timer-box">
@@ -63,7 +59,7 @@
                             </div>
                             <div class="timer-controls">
                                 <button class="small-btn" onclick="toggleTimer()">Start / Stop</button>
-                                <button class="reset-total-btn" onclick="resetTimer()">↻</button>
+                                <button class="reset-total-btn" onclick="resetTimer()">↺</button>
                             </div>
                         </div>
                     </div>
@@ -71,7 +67,7 @@
                         <button class="arrow-btn" onclick="changeTotalTime(-300)">←</button>
                         <div class="total-time">Tempo Totale: <span id="totalTime">00:00</span></div>
                         <button class="arrow-btn" onclick="changeTotalTime(300)">→</button>
-                        <button class="reset-total-btn" onclick="resetTotalTime()">↻</button>
+                        <button class="reset-total-btn" onclick="resetTotalTime()">↺</button>
                     </div>
                 </div>
                 <div class="right-column">
@@ -123,102 +119,11 @@
 
 </div>
 
-<!-- Settings Menu Modal -->
-<div class="modal-overlay modal-overlay--hidden" id="settingsModal">
-    <div class="modal-content settings-modal-content">
-        <div class="modal-header">
-            <h2>Impostazioni</h2>
-            <button class="modal-close" onclick="closeSettingsMenu()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="settings-section">
-                <h3>Account</h3>
-                <div class="user-info-setting" id="userInfoSetting">
-                    <p>Non sei loggato</p>
-                    <button class="form-btn form-btn--primary" onclick="showLoginFromSettings()">Accedi / Registrati</button>
-                </div>
-                <div id="loggedInUserInfo" style="display: none;">
-                    <p>Loggato come: <span id="settingsUserEmail"></span></p>
-                    <button class="form-btn form-btn--secondary" onclick="logout()">Esci</button>
-                </div>
-            </div>
-            
-            <div class="settings-section">
-                <h3>Data</h3>
-                <div class="form-group">
-                    <label for="customDate">Imposta data manualmente:</label>
-                    <input type="date" id="customDate" class="form-input" onchange="setCustomDate()">
-                </div>
-                <button class="form-btn form-btn--secondary" onclick="resetToToday()">Reimposta a oggi</button>
-                <p class="date-info">Data corrente: <span id="currentDateDisplay"></span></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Login Modal -->
-<div class="modal-overlay modal-overlay--hidden" id="loginModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Accedi</h2>
-            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="loginForm" onsubmit="login(event)">
-                <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" class="form-input" placeholder="tua@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" class="form-input" placeholder="Password" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="form-btn form-btn--primary">Accedi</button>
-                    <button type="button" class="form-btn form-btn--secondary" onclick="showRegister()">Registrati</button>
-                </div>
-            </form>
-            <div id="loginError" class="error-message"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Register Modal -->
-<div class="modal-overlay modal-overlay--hidden" id="registerModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Registrati</h2>
-            <button class="modal-close" onclick="closeRegisterModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="registerForm" onsubmit="register(event)">
-                <div class="form-group">
-                    <label for="registerEmail">Email</label>
-                    <input type="email" id="registerEmail" class="form-input" placeholder="tua@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerPassword">Password</label>
-                    <input type="password" id="registerPassword" class="form-input" placeholder="Password" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label for="registerConfirmPassword">Conferma Password</label>
-                    <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Conferma Password" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="form-btn form-btn--primary">Registrati</button>
-                    <button type="button" class="form-btn form-btn--secondary" onclick="showLogin()">Accedi</button>
-                </div>
-            </form>
-            <div id="registerError" class="error-message"></div>
-        </div>
-    </div>
-</div>
-
 <div class="stat-overlay stat-overlay--hidden" id="statsOverlay">
     <div class="stat-page">
         <div class="stat-topbar">
             <h2 class="stat-heading">Statistiche</h2>
-            <button class="stat-close-btn" onclick="closeStats()">×</button>
+            <button class="stat-close-btn" onclick="closeStats()">✕</button>
         </div>
         <div class="stat-controls">
             <div class="period-tabs">
@@ -238,7 +143,7 @@
                 <div class="stat-total-value" id="statsTotalPages">0</div>
             </div>
             <div class="stat-total-card">
-                <div class="stat-total-label">⏰ Ore di studio</div>
+                <div class="stat-total-label">⏱ Ore di studio</div>
                 <div class="stat-total-value" id="statsTotalHours">0h 00m</div>
             </div>
         </div>
@@ -259,29 +164,6 @@
     </div>
 </div>
 
-
-<!-- Settings Menu Modal -->
-<div class="modal-overlay modal-overlay--hidden" id="settingsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Impostazioni</h2>
-            <button class="modal-close" onclick="closeSettingsMenu()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="settings-section">
-                <button class="form-btn form-btn--primary" onclick="alert('Funzionalità account non ancora implementata')">Accedi al proprio account</button>
-            </div>
-            <div class="settings-section">
-                <div class="form-group">
-                    <label for="customDate">Imposta data di oggi:</label>
-                    <input type="date" id="customDate" class="form-input" onchange="setCustomDate()">
-                </div>
-                <button class="form-btn form-btn--secondary" onclick="resetToToday()">Reimposta a oggi</button>
-                <p class="date-info">Data corrente: <span id="currentDateDisplay"></span></p>
-            </div>
-        </div>
-    </div>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="script.js"></script>
