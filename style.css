@@ -1023,7 +1023,7 @@ h1 {
     border: none;
     padding: 10px 26px;
     border-radius: 16px;
-    background: var(--pink);
+    background: #ffffff;
     color: var(--brown);
     font-size: 14px;
     font-weight: 600;
@@ -1032,7 +1032,7 @@ h1 {
     transition: 0.2s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
-.goals-open-btn:hover { background: white; transform: translateY(-2px); }
+.goals-open-btn:hover { background: #f7f7f7; transform: translateY(-2px); }
 
 .active-goal-display {
     display: flex;
