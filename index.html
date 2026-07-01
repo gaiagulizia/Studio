@@ -118,6 +118,11 @@
 
     </div>
 
+    <div class="goals-section">
+        <button class="goals-open-btn" onclick="openGoalsModal()">🎯 Obiettivi</button>
+        <div class="active-goal-display active-goal--hidden" id="activeGoalDisplay"></div>
+    </div>
+
 </div>
 
 <div class="stat-overlay stat-overlay--hidden" id="statsOverlay">
@@ -244,6 +249,41 @@
             <button type="submit" class="submit-btn">Registrati</button>
         </form>
         <p>Hai già un account? <button class="link-btn" onclick="showLogin()">Accedi</button></p>
+    </div>
+</div>
+
+<!-- Goals Modal -->
+<div class="modal-overlay modal-overlay--hidden" id="goalsModal">
+    <div class="modal-content goals-modal-content">
+        <div class="modal-header">
+            <h2>🎯 Obiettivi</h2>
+            <button class="modal-close-btn" onclick="closeGoalsModal()">×</button>
+        </div>
+
+        <div id="goalsList" class="goals-list"></div>
+
+        <hr class="goals-divider">
+
+        <h3 class="goals-form-title" id="goalFormTitle">Nuovo obiettivo</h3>
+        <form onsubmit="submitGoalForm(event)" class="goal-form">
+            <div class="form-group">
+                <label for="goalNameInput">Nome obiettivo:</label>
+                <input type="text" id="goalNameInput" placeholder="Es. Esame di Anatomia" required>
+            </div>
+            <div class="form-group">
+                <label for="goalDaysInput">Giorni a disposizione:</label>
+                <input type="number" id="goalDaysInput" min="1" step="1" placeholder="Es. 11" required>
+            </div>
+            <div class="form-group">
+                <label for="goalPagesInput">Pagine totali da studiare:</label>
+                <input type="number" id="goalPagesInput" min="1" step="1" placeholder="Es. 110" required>
+            </div>
+            <p id="goalFormError" class="error-message"></p>
+            <div class="goal-form-buttons">
+                <button type="submit" class="submit-btn" id="goalFormSubmitBtn">➕ Aggiungi obiettivo</button>
+                <button type="button" class="link-btn goal-cancel-btn" id="goalFormCancelBtn" onclick="cancelEditGoal()">Annulla modifica</button>
+            </div>
+        </form>
     </div>
 </div>
 </body>
