@@ -1005,3 +1005,189 @@ h1 {
         padding-left: 50px;
     }
 }
+
+/* ================================================
+   SEZIONE OBIETTIVI (schermata principale)
+   ================================================ */
+
+.goals-section {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 0;
+}
+
+.goals-open-btn {
+    border: none;
+    padding: 10px 26px;
+    border-radius: 16px;
+    background: var(--pink);
+    color: var(--brown);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "DynaPuff", system-ui;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.goals-open-btn:hover { background: white; transform: translateY(-2px); }
+
+.active-goal-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 16px;
+    padding: 8px 20px;
+    max-width: 100%;
+}
+
+.active-goal--hidden { display: none; }
+
+.active-goal-name {
+    font-family: "DynaPuff", system-ui;
+    font-weight: 600;
+    color: var(--brown);
+    font-size: 14px;
+}
+
+.active-goal-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "DynaPuff", system-ui;
+    font-size: 13px;
+    color: var(--brown);
+}
+
+.active-goal-label { opacity: 0.75; }
+.active-goal-value { font-weight: 700; }
+.active-goal-value--done { color: #2e7d32; }
+.active-goal-value--late { color: #d32f2f; }
+
+/* --- Goals Modal --- */
+.goals-modal-content {
+    min-width: 320px;
+    max-width: 460px;
+}
+
+.goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: 6px;
+}
+
+.goals-empty {
+    font-family: "DynaPuff", system-ui;
+    color: var(--brown);
+    opacity: 0.7;
+    font-size: 13px;
+    text-align: center;
+    padding: 14px 4px;
+}
+
+.goal-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--lightPink);
+    border: 2px solid transparent;
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+
+.goal-card--active {
+    border-color: var(--brown);
+    background: var(--pink);
+}
+
+.goal-card-info { flex: 1; min-width: 0; }
+
+.goal-card-name {
+    font-family: "DynaPuff", system-ui;
+    font-weight: 700;
+    color: var(--brown);
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.goal-active-badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--brown);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.goal-card-details {
+    font-family: "DynaPuff", system-ui;
+    color: var(--brown);
+    font-size: 12px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.goal-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.goal-action-btn {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: white;
+    color: var(--brown);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: "DynaPuff", system-ui;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+.goal-action-btn:hover:not(:disabled) { background: var(--brown); color: white; }
+.goal-action-btn:disabled { opacity: 0.6; cursor: default; }
+.goal-action-btn--danger:hover { background: #d32f2f; color: white; }
+
+.goals-divider {
+    border: none;
+    border-top: 2px solid var(--lightPink);
+    margin: 14px 0;
+}
+
+.goals-form-title {
+    font-family: "DynaPuff", system-ui;
+    color: var(--brown);
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+.goal-form-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.goal-cancel-btn { display: none; }
+.goal-cancel-btn--visible { display: inline-block; }
+
+@media (max-width: 768px) {
+    .goals-section { padding-top: 2px; }
+    .active-goal-display { padding: 8px 14px; }
+}
