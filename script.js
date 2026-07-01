@@ -196,6 +196,7 @@ function render() {
     updateSpeed();
     save();
     fitMainBox();
+    if (typeof updateActiveGoalDisplay === "function") updateActiveGoalDisplay();
 }
 
 window.addEventListener("resize", fitMainBox);
@@ -995,6 +996,8 @@ function loadDataForDate(dateKey) {
     // Salva i dati locali
     save();
     localStorage.setItem("totalStudySeconds", totalStudySeconds);
+
+    if (typeof updateActiveGoalDisplay === "function") updateActiveGoalDisplay();
 }
 
 // Controlla se è mezzanotte e resetta i dati
@@ -1031,11 +1034,334 @@ function checkMidnightReset() {
         render();
         updateTotalTime();
         updateSpeed();
+        if (typeof updateActiveGoalDisplay === "function") updateActiveGoalDisplay();
     }
 }
 
 // Controlla la mezzanotte periodicamente
 setInterval(checkMidnightReset, 60000); // Controlla ogni minuto
+
+/* =============================================
+   OBIETTIVI DI STUDIO
+   ============================================= */
+
+const GOALS_KEY = "studyGoals";
+const ACTIVE_GOAL_KEY = "activeGoalId";
+
+let studyGoals   = [];
+let activeGoalId = null;
+let editingGoalId = null; // null = si sta creando un nuovo obiettivo
+
+function loadGoals() {
+    try { studyGoals = JSON.parse(localStorage.getItem(GOALS_KEY) || "[]"); }
+    catch { studyGoals = []; }
+    activeGoalId = localStorage.getItem(ACTIVE_GOAL_KEY) || null;
+    if (activeGoalId && !studyGoals.some(g => g.id === activeGoalId)) {
+        activeGoalId = null;
+    }
+}
+
+function saveGoals() { localStorage.setItem(GOALS_KEY, JSON.stringify(studyGoals)); }
+
+function saveActiveGoal() {
+    if (activeGoalId) localStorage.setItem(ACTIVE_GOAL_KEY, activeGoalId);
+    else localStorage.removeItem(ACTIVE_GOAL_KEY);
+}
+
+function genGoalId() { return "g_" + Date.now() + "_" + Math.floor(Math.random() * 100000); }
+
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/* --- Utility date (formato YYYY-MM-DD) --- */
+
+function dateKeyAddDays(dateKey, n) {
+    const d = new Date(dateKey + "T00:00:00");
+    d.setDate(d.getDate() + n);
+    return getDateKey(d);
+}
+
+function daysBetweenKeys(dateKeyA, dateKeyB) {
+    const a = new Date(dateKeyA + "T00:00:00");
+    const b = new Date(dateKeyB + "T00:00:00");
+    return Math.round((b - a) / 86400000);
+}
+
+function formatDateKeyIt(dateKey) {
+    const d = new Date(dateKey + "T00:00:00");
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+/* --- Apertura/chiusura modale --- */
+
+function openGoalsModal() {
+    loadGoals();
+    const modal = document.getElementById("goalsModal");
+    if (!modal) return;
+    modal.classList.remove("modal-overlay--hidden");
+    resetGoalForm();
+    renderGoalsList();
+}
+
+function closeGoalsModal() {
+    const modal = document.getElementById("goalsModal");
+    if (modal) modal.classList.add("modal-overlay--hidden");
+}
+
+/* --- Form di creazione/modifica obiettivo --- */
+
+function resetGoalForm() {
+    editingGoalId = null;
+    const nameEl  = document.getElementById("goalNameInput");
+    const daysEl  = document.getElementById("goalDaysInput");
+    const pagesEl = document.getElementById("goalPagesInput");
+    if (nameEl)  nameEl.value  = "";
+    if (daysEl)  daysEl.value  = "";
+    if (pagesEl) pagesEl.value = "";
+
+    const titleEl = document.getElementById("goalFormTitle");
+    if (titleEl) titleEl.textContent = "Nuovo obiettivo";
+
+    const submitBtn = document.getElementById("goalFormSubmitBtn");
+    if (submitBtn) submitBtn.textContent = "➕ Aggiungi obiettivo";
+
+    const cancelBtn = document.getElementById("goalFormCancelBtn");
+    if (cancelBtn) cancelBtn.classList.remove("goal-cancel-btn--visible");
+
+    const errorEl = document.getElementById("goalFormError");
+    if (errorEl) errorEl.textContent = "";
+}
+
+function cancelEditGoal() { resetGoalForm(); }
+
+function submitGoalForm(event) {
+    event.preventDefault();
+
+    const name  = document.getElementById("goalNameInput").value.trim();
+    const days  = Math.floor(Number(document.getElementById("goalDaysInput").value));
+    const pages = Math.floor(Number(document.getElementById("goalPagesInput").value));
+    const errorEl = document.getElementById("goalFormError");
+
+    if (!name || !Number.isFinite(days) || days < 1 || !Number.isFinite(pages) || pages < 1) {
+        if (errorEl) errorEl.textContent = "Compila tutti i campi con valori validi.";
+        return;
+    }
+    if (errorEl) errorEl.textContent = "";
+
+    if (editingGoalId) {
+        const g = studyGoals.find(g => g.id === editingGoalId);
+        if (g) {
+            g.name = name;
+            g.totalDays = days;
+            g.totalPages = pages;
+            // La data di inizio non viene modificata: il conteggio dei giorni resta coerente
+        }
+    } else {
+        const newGoal = {
+            id: genGoalId(),
+            name,
+            totalDays: days,
+            totalPages: pages,
+            startDate: getTodayKey()
+        };
+        studyGoals.push(newGoal);
+        if (!activeGoalId) {
+            activeGoalId = newGoal.id;
+            saveActiveGoal();
+        }
+    }
+
+    saveGoals();
+    resetGoalForm();
+    renderGoalsList();
+    updateActiveGoalDisplay();
+}
+
+function editGoal(id) {
+    const g = studyGoals.find(g => g.id === id);
+    if (!g) return;
+    editingGoalId = id;
+
+    document.getElementById("goalNameInput").value  = g.name;
+    document.getElementById("goalDaysInput").value  = g.totalDays;
+    document.getElementById("goalPagesInput").value = g.totalPages;
+
+    const titleEl = document.getElementById("goalFormTitle");
+    if (titleEl) titleEl.textContent = "Modifica obiettivo";
+
+    const submitBtn = document.getElementById("goalFormSubmitBtn");
+    if (submitBtn) submitBtn.textContent = "💾 Salva modifiche";
+
+    const cancelBtn = document.getElementById("goalFormCancelBtn");
+    if (cancelBtn) cancelBtn.classList.add("goal-cancel-btn--visible");
+}
+
+function deleteGoal(id) {
+    if (!confirm("Vuoi davvero eliminare questo obiettivo?")) return;
+    studyGoals = studyGoals.filter(g => g.id !== id);
+    saveGoals();
+    if (activeGoalId === id) {
+        activeGoalId = studyGoals.length > 0 ? studyGoals[0].id : null;
+        saveActiveGoal();
+    }
+    if (editingGoalId === id) resetGoalForm();
+    renderGoalsList();
+    updateActiveGoalDisplay();
+}
+
+function selectActiveGoal(id) {
+    activeGoalId = id;
+    saveActiveGoal();
+    renderGoalsList();
+    updateActiveGoalDisplay();
+}
+
+/* --- Calcolo dinamico delle pagine giornaliere ---
+   Ad ogni nuovo giorno le pagine rimaste vengono ridivise per i giorni
+   rimasti, tenendo conto di quanto è stato effettivamente studiato nei
+   giorni precedenti (in eccesso o in difetto rispetto al piano). */
+
+function computeGoalProgress(goal) {
+    const todayKey = getTodayKey();
+    const allData  = getAllDailyData();
+
+    // Numero di giorni trascorsi dall'inizio dell'obiettivo (0 = giorno di inizio)
+    let dayIndex = daysBetweenKeys(goal.startDate, todayKey);
+    if (dayIndex < 0) dayIndex = 0;
+
+    // Pagine studiate nei giorni PRECEDENTI a oggi (dall'inizio dell'obiettivo)
+    let pagesDoneBeforeToday = 0;
+    for (let i = 0; i < dayIndex; i++) {
+        const key = dateKeyAddDays(goal.startDate, i);
+        pagesDoneBeforeToday += (allData[key] && allData[key].pages) || 0;
+    }
+
+    // Pagine studiate oggi (incluse per capire se l'obiettivo è già raggiunto)
+    const pagesToday_actual = (allData[todayKey] && allData[todayKey].pages) || 0;
+    const pagesDoneTotal    = pagesDoneBeforeToday + pagesToday_actual;
+
+    const remainingPages = Math.max(0, goal.totalPages - pagesDoneBeforeToday);
+    const remainingDays  = Math.max(1, goal.totalDays - dayIndex); // oggi conta come giorno rimasto
+
+    const completed  = pagesDoneTotal >= goal.totalPages;
+    const isOverdue  = !completed && dayIndex >= goal.totalDays;
+
+    let pagesToday = 0;
+    if (!completed) {
+        pagesToday = Math.ceil(remainingPages / remainingDays);
+    }
+
+    const deadlineKey = dateKeyAddDays(goal.startDate, goal.totalDays - 1);
+
+    return {
+        pagesToday,
+        deadlineKey,
+        remainingDays,
+        remainingPages,
+        pagesDoneTotal,
+        completed,
+        isOverdue
+    };
+}
+
+/* --- Rendering --- */
+
+function renderGoalsList() {
+    const listEl = document.getElementById("goalsList");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+
+    if (studyGoals.length === 0) {
+        listEl.innerHTML = '<p class="goals-empty">Nessun obiettivo impostato. Creane uno qui sotto! 👇</p>';
+        return;
+    }
+
+    studyGoals.forEach(g => {
+        const progress = computeGoalProgress(g);
+        const isActive = g.id === activeGoalId;
+
+        const card = document.createElement("div");
+        card.className = "goal-card" + (isActive ? " goal-card--active" : "");
+
+        const info = document.createElement("div");
+        info.className = "goal-card-info";
+
+        let statusLine;
+        if (progress.completed) statusLine = "📖 Obiettivo raggiunto! 🎉";
+        else statusLine = `📖 ${progress.pagesToday} pagine da studiare oggi${progress.isOverdue ? " (in ritardo)" : ""}`;
+
+        info.innerHTML = `
+            <div class="goal-card-name">${escapeHtml(g.name)}${isActive ? ' <span class="goal-active-badge">Attivo</span>' : ''}</div>
+            <div class="goal-card-details">
+                ${statusLine}<br>
+                📅 Scadenza: ${formatDateKeyIt(progress.deadlineKey)}<br>
+                📊 ${progress.pagesDoneTotal} / ${g.totalPages} pagine · ${g.totalDays} giorni totali
+            </div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "goal-card-actions";
+
+        const selectBtn = document.createElement("button");
+        selectBtn.className = "goal-action-btn";
+        selectBtn.textContent = isActive ? "✓ Selezionato" : "Seleziona";
+        selectBtn.disabled = isActive;
+        selectBtn.onclick = () => selectActiveGoal(g.id);
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "goal-action-btn";
+        editBtn.textContent = "✏️ Modifica";
+        editBtn.onclick = () => editGoal(g.id);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "goal-action-btn goal-action-btn--danger";
+        delBtn.textContent = "🗑️ Elimina";
+        delBtn.onclick = () => deleteGoal(g.id);
+
+        actions.appendChild(selectBtn);
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(info);
+        card.appendChild(actions);
+        listEl.appendChild(card);
+    });
+}
+
+function updateActiveGoalDisplay() {
+    const wrapper = document.getElementById("activeGoalDisplay");
+    if (!wrapper) return;
+
+    const goal = studyGoals.find(g => g.id === activeGoalId);
+    if (!goal) {
+        wrapper.classList.add("active-goal--hidden");
+        wrapper.innerHTML = "";
+        return;
+    }
+
+    const progress = computeGoalProgress(goal);
+    wrapper.classList.remove("active-goal--hidden");
+
+    const valueClass = progress.completed ? "active-goal-value active-goal-value--done"
+                      : progress.isOverdue ? "active-goal-value active-goal-value--late"
+                      : "active-goal-value";
+    const pagesText = progress.completed ? "Raggiunto! 🎉" : progress.pagesToday;
+
+    wrapper.innerHTML = `
+        <div class="active-goal-name">🎯 ${escapeHtml(goal.name)}</div>
+        <div class="active-goal-row">
+            <span class="active-goal-label">Pagine oggi:</span>
+            <span class="${valueClass}">${pagesText}</span>
+        </div>
+        <div class="active-goal-row">
+            <span class="active-goal-label">Scadenza:</span>
+            <span class="active-goal-value">${formatDateKeyIt(progress.deadlineKey)}</span>
+        </div>
+    `;
+}
 
 /* =============================================
    INIT
@@ -1049,3 +1375,5 @@ updateTimer();
 updateTotalTime();
 updateSpeed();
 checkMidnightReset();
+loadGoals();
+updateActiveGoalDisplay();
