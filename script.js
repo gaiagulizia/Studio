@@ -844,7 +844,77 @@ function toggleSettingsMenu() {
         modal.classList.toggle("modal-overlay--hidden");
         updateCurrentDateDisplay();
         updateSettingsUserInfo();
+        syncGifToggleUI();
+        syncThemeSwatchUI();
     }
+}
+
+/* =============================================
+   IMPOSTAZIONI: MOSTRA/NASCONDI GIF
+   ============================================= */
+
+const GIF_VISIBLE_KEY = "gifVisible";
+
+// Applica la visibilità della gif salvata (da chiamare all'avvio)
+function initGifVisibility() {
+    const saved = localStorage.getItem(GIF_VISIBLE_KEY);
+    const visible = saved === null ? true : saved === "true";
+    document.body.classList.toggle("gif-hidden", !visible);
+}
+
+// Allinea il checkbox delle impostazioni allo stato attuale
+function syncGifToggleUI() {
+    const toggle = document.getElementById("gifVisibleToggle");
+    if (toggle) toggle.checked = !document.body.classList.contains("gif-hidden");
+}
+
+// Cambia la visibilità della gif dal menù impostazioni
+function toggleGifVisibility() {
+    const toggle = document.getElementById("gifVisibleToggle");
+    const visible = toggle ? toggle.checked : true;
+    document.body.classList.toggle("gif-hidden", !visible);
+    localStorage.setItem(GIF_VISIBLE_KEY, visible);
+}
+
+/* =============================================
+   IMPOSTAZIONI: COLORE DELLO SFONDO
+   ============================================= */
+
+const BG_THEME_KEY = "bgTheme";
+
+const BG_THEMES = {
+    pink:  { pink: "#ffd6e7", lightPink: "#fff3f8" },
+    brown: { pink: "#775537", lightPink: "#fbe29d" },
+    blue:  { pink: "#a2b9d5", lightPink: "#f4f2e2" },
+    green: { pink: "#a6baae", lightPink: "#eee0ca" }
+};
+
+// Applica il tema colore salvato (da chiamare all'avvio)
+function initBgTheme() {
+    const saved = localStorage.getItem(BG_THEME_KEY) || "pink";
+    applyBgTheme(saved);
+}
+
+// Imposta il colore di sfondo scelto dall'utente nel menù impostazioni
+function setBgTheme(themeName) {
+    localStorage.setItem(BG_THEME_KEY, themeName);
+    applyBgTheme(themeName);
+}
+
+// Applica le variabili CSS del tema scelto
+function applyBgTheme(themeName) {
+    const theme = BG_THEMES[themeName] || BG_THEMES.pink;
+    document.documentElement.style.setProperty("--pink", theme.pink);
+    document.documentElement.style.setProperty("--lightPink", theme.lightPink);
+    syncThemeSwatchUI();
+}
+
+// Evidenzia lo swatch corrispondente al tema attivo
+function syncThemeSwatchUI() {
+    const activeTheme = localStorage.getItem(BG_THEME_KEY) || "pink";
+    document.querySelectorAll(".theme-swatch").forEach(btn => {
+        btn.classList.toggle("theme-swatch--active", btn.dataset.theme === activeTheme);
+    });
 }
 
 // Chiudi il menù delle impostazioni
@@ -1368,6 +1438,8 @@ function updateActiveGoalDisplay() {
    ============================================= */
 
 initUser();
+initGifVisibility();
+initBgTheme();
 rebuildBoxes();
 render();
 updateStopwatch();
