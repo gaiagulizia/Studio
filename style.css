@@ -173,7 +173,7 @@ h1 {
 }
 .reset-total-btn {
     border: none; width: 32px; height: 32px; border-radius: 11px;
-    background: #750608; color: white; font-size: 16px;
+    background: #ba1619; color: white; font-size: 16px;
     cursor: pointer; transition: 0.2s; flex-shrink: 0;
 }
 .reset-total-btn:hover { transform: translateY(-2px); }
@@ -192,7 +192,7 @@ h1 {
     font-family: "Cherry Bomb One", system-ui; cursor: pointer; transition: 0.2s;
 }
 .key:hover { transform: translateY(-2px); }
-.clear-key { background: #750608; color: white; }
+.clear-key { background: #ba1619; color: white; }
 
 .counter {
     background: white; padding: 8px 18px; border-radius: 16px;
@@ -217,7 +217,7 @@ h1 {
     font-weight: 600; cursor: pointer; color: white; transition: 0.2s;
 }
 .add-btn    { background: #6d3518; }
-.remove-btn { background: #750608; }
+.remove-btn { background: #ba1619; }
 .add-btn:hover, .remove-btn:hover { transform: translateY(-2px); }
 
 /* Box scatola (centrata su X grazie a position:relative + gif assoluta) */
@@ -416,7 +416,7 @@ h1 {
 .stat-close-btn {
     position: absolute; right: 0;
     border: none; width: 36px; height: 36px; border-radius: 12px;
-    background: #750608; color: white; font-size: 17px; cursor: pointer; transition: 0.2s;
+    background: #ba1619; color: white; font-size: 17px; cursor: pointer; transition: 0.2s;
 }
 .stat-close-btn:hover { transform: scale(1.1); }
 
