@@ -1284,6 +1284,28 @@ body.gif-hidden .study-gif-mobile {
 }
 .goal-pages-save-btn:hover { background: var(--brown); color: white; }
 
+/* --- Badge pagine iniziali --- */
+.goal-initial-badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(109,53,24,0.12);
+    color: var(--brown);
+    padding: 1px 6px;
+    border-radius: 8px;
+    vertical-align: middle;
+    cursor: help;
+}
+
+.goal-initial-hint {
+    display: block;
+    font-family: "DynaPuff", system-ui;
+    font-size: 11px;
+    color: var(--brown);
+    opacity: 0.65;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
 /* --- Pulsante archivia --- */
 .goal-action-btn--archive { background: #fff8e1; color: #7b5e00; }
 .goal-action-btn--archive:hover { background: #7b5e00; color: white; }
