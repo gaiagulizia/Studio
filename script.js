@@ -1203,12 +1203,14 @@ function closeGoalsModal() {
 
 function resetGoalForm() {
     editingGoalId = null;
-    const nameEl  = document.getElementById("goalNameInput");
-    const daysEl  = document.getElementById("goalDaysInput");
-    const pagesEl = document.getElementById("goalPagesInput");
-    if (nameEl)  nameEl.value  = "";
-    if (daysEl)  daysEl.value  = "";
-    if (pagesEl) pagesEl.value = "";
+    const nameEl    = document.getElementById("goalNameInput");
+    const daysEl    = document.getElementById("goalDaysInput");
+    const pagesEl   = document.getElementById("goalPagesInput");
+    const initialEl = document.getElementById("goalInitialPagesInput");
+    if (nameEl)    nameEl.value    = "";
+    if (daysEl)    daysEl.value    = "";
+    if (pagesEl)   pagesEl.value   = "";
+    if (initialEl) initialEl.value = "";
 
     const titleEl = document.getElementById("goalFormTitle");
     if (titleEl) titleEl.textContent = "Nuovo obiettivo";
@@ -1228,10 +1230,11 @@ function cancelEditGoal() { resetGoalForm(); }
 function submitGoalForm(event) {
     event.preventDefault();
 
-    const name  = document.getElementById("goalNameInput").value.trim();
-    const days  = Math.floor(Number(document.getElementById("goalDaysInput").value));
-    const pages = Math.floor(Number(document.getElementById("goalPagesInput").value));
-    const errorEl = document.getElementById("goalFormError");
+    const name         = document.getElementById("goalNameInput").value.trim();
+    const days         = Math.floor(Number(document.getElementById("goalDaysInput").value));
+    const pages        = Math.floor(Number(document.getElementById("goalPagesInput").value));
+    const initialPages = Math.max(0, Math.floor(Number(document.getElementById("goalInitialPagesInput").value) || 0));
+    const errorEl      = document.getElementById("goalFormError");
 
     if (!name || !Number.isFinite(days) || days < 1 || !Number.isFinite(pages) || pages < 1) {
         if (errorEl) errorEl.textContent = "Compila tutti i campi con valori validi.";
@@ -1245,6 +1248,7 @@ function submitGoalForm(event) {
             g.name = name;
             g.totalDays = days;
             g.totalPages = pages;
+            g.initialPages = initialPages;
             // La data di inizio non viene modificata: il conteggio dei giorni resta coerente
         }
     } else {
@@ -1253,6 +1257,7 @@ function submitGoalForm(event) {
             name,
             totalDays: days,
             totalPages: pages,
+            initialPages,
             startDate: getTodayKey()
         };
         studyGoals.push(newGoal);
@@ -1276,6 +1281,8 @@ function editGoal(id) {
     document.getElementById("goalNameInput").value  = g.name;
     document.getElementById("goalDaysInput").value  = g.totalDays;
     document.getElementById("goalPagesInput").value = g.totalPages;
+    const initialEl = document.getElementById("goalInitialPagesInput");
+    if (initialEl) initialEl.value = g.initialPages || 0;
 
     const titleEl = document.getElementById("goalFormTitle");
     if (titleEl) titleEl.textContent = "Modifica obiettivo";
@@ -1316,6 +1323,7 @@ function selectActiveGoal(id) {
 function computeGoalProgress(goal) {
     const todayKey = getTodayKey();
     const pagesPerDay = goal.pagesPerDay || {};
+    const initialPages = goal.initialPages || 0;
 
     // Numero di giorni trascorsi dall'inizio dell'obiettivo (0 = giorno di inizio)
     let dayIndex = daysBetweenKeys(goal.startDate, todayKey);
@@ -1331,9 +1339,12 @@ function computeGoalProgress(goal) {
 
     // Pagine studiate oggi per questo obiettivo specifico
     const pagesToday_actual = pagesPerDay[todayKey] || 0;
-    const pagesDoneTotal    = pagesDoneBeforeToday + pagesToday_actual;
 
-    const remainingPages = Math.max(0, goal.totalPages - pagesDoneBeforeToday);
+    // Totale pagine studiate = pagine iniziali + giorni precedenti + oggi
+    const pagesDoneTotal = initialPages + pagesDoneBeforeToday + pagesToday_actual;
+
+    // Le pagine rimanenti tengono conto anche di quelle iniziali
+    const remainingPages = Math.max(0, goal.totalPages - initialPages - pagesDoneBeforeToday);
     const remainingDays  = Math.max(1, goal.totalDays - dayIndex); // oggi conta come giorno rimasto
 
     const completed  = pagesDoneTotal >= goal.totalPages;
@@ -1353,6 +1364,7 @@ function computeGoalProgress(goal) {
         remainingDays,
         remainingPages,
         pagesDoneTotal,
+        initialPages,
         completed,
         isOverdue
     };
@@ -1393,12 +1405,16 @@ function renderGoalsList() {
         if (progress.completed) statusLine = "📖 Obiettivo raggiunto! 🎉";
         else statusLine = `📖 Obiettivo: ${progress.pagesToday} pag. oggi · Fatte: <strong>${progress.pagesTodayDone}</strong>${progress.isOverdue ? " (in ritardo)" : ""}`;
 
+        const initialNote = progress.initialPages > 0
+            ? ` <span class="goal-initial-badge" title="Pagine già studiate prima di iniziare l'obiettivo">(+${progress.initialPages} iniziali)</span>`
+            : '';
+
         info.innerHTML = `
             <div class="goal-card-name">${escapeHtml(g.name)}${isActive ? ' <span class="goal-active-badge">Attivo</span>' : ''}</div>
             <div class="goal-card-details">
                 ${statusLine}<br>
                 📅 Scadenza: ${formatDateKeyIt(progress.deadlineKey)}<br>
-                📊 ${progress.pagesDoneTotal} / ${g.totalPages} pagine · ${g.totalDays} giorni totali
+                📊 ${progress.pagesDoneTotal}${initialNote} / ${g.totalPages} pagine · ${g.totalDays} giorni totali
             </div>
             <div class="goal-pages-edit">
                 <label class="goal-pages-edit-label">Pagine studiate oggi:</label>
