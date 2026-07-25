@@ -60,6 +60,24 @@ function recordTodayPages(delta) {
     if (!data[key]) data[key] = { pages: 0, seconds: 0 };
     data[key].pages = Math.max(0, (data[key].pages || 0) + delta);
     saveDailyData(data);
+    // Aggiorna anche le pagine dell'obiettivo attivo
+    if (activeGoalId) {
+        updateGoalPagesForDate(activeGoalId, key, delta);
+    }
+}
+
+/* Aggiorna le pagine di un obiettivo specifico per una data (delta o valore assoluto) */
+function updateGoalPagesForDate(goalId, dateKey, delta, absolute) {
+    const goal = studyGoals.find(g => g.id === goalId);
+    if (!goal) return;
+    if (!goal.pagesPerDay) goal.pagesPerDay = {};
+    const current = goal.pagesPerDay[dateKey] || 0;
+    if (absolute !== undefined) {
+        goal.pagesPerDay[dateKey] = Math.max(0, absolute);
+    } else {
+        goal.pagesPerDay[dateKey] = Math.max(0, current + delta);
+    }
+    saveGoals();
 }
 
 function recordTodaySeconds(delta) {
@@ -1126,7 +1144,7 @@ function loadGoals() {
     try { studyGoals = JSON.parse(localStorage.getItem(GOALS_KEY) || "[]"); }
     catch { studyGoals = []; }
     activeGoalId = localStorage.getItem(ACTIVE_GOAL_KEY) || null;
-    if (activeGoalId && !studyGoals.some(g => g.id === activeGoalId)) {
+    if (activeGoalId && !studyGoals.some(g => g.id === activeGoalId && !g.archived)) {
         activeGoalId = null;
     }
 }
@@ -1274,7 +1292,8 @@ function deleteGoal(id) {
     studyGoals = studyGoals.filter(g => g.id !== id);
     saveGoals();
     if (activeGoalId === id) {
-        activeGoalId = studyGoals.length > 0 ? studyGoals[0].id : null;
+        const next = studyGoals.find(g => !g.archived);
+        activeGoalId = next ? next.id : null;
         saveActiveGoal();
     }
     if (editingGoalId === id) resetGoalForm();
@@ -1296,21 +1315,22 @@ function selectActiveGoal(id) {
 
 function computeGoalProgress(goal) {
     const todayKey = getTodayKey();
-    const allData  = getAllDailyData();
+    const pagesPerDay = goal.pagesPerDay || {};
 
     // Numero di giorni trascorsi dall'inizio dell'obiettivo (0 = giorno di inizio)
     let dayIndex = daysBetweenKeys(goal.startDate, todayKey);
     if (dayIndex < 0) dayIndex = 0;
 
     // Pagine studiate nei giorni PRECEDENTI a oggi (dall'inizio dell'obiettivo)
+    // Usa le pagine specifiche dell'obiettivo (pagesPerDay), non quelle globali
     let pagesDoneBeforeToday = 0;
     for (let i = 0; i < dayIndex; i++) {
         const key = dateKeyAddDays(goal.startDate, i);
-        pagesDoneBeforeToday += (allData[key] && allData[key].pages) || 0;
+        pagesDoneBeforeToday += pagesPerDay[key] || 0;
     }
 
-    // Pagine studiate oggi (incluse per capire se l'obiettivo è già raggiunto)
-    const pagesToday_actual = (allData[todayKey] && allData[todayKey].pages) || 0;
+    // Pagine studiate oggi per questo obiettivo specifico
+    const pagesToday_actual = pagesPerDay[todayKey] || 0;
     const pagesDoneTotal    = pagesDoneBeforeToday + pagesToday_actual;
 
     const remainingPages = Math.max(0, goal.totalPages - pagesDoneBeforeToday);
@@ -1319,15 +1339,16 @@ function computeGoalProgress(goal) {
     const completed  = pagesDoneTotal >= goal.totalPages;
     const isOverdue  = !completed && dayIndex >= goal.totalDays;
 
-    let pagesToday = 0;
+    let pagesTodayTarget = 0;
     if (!completed) {
-        pagesToday = Math.ceil(remainingPages / remainingDays);
+        pagesTodayTarget = Math.ceil(remainingPages / remainingDays);
     }
 
     const deadlineKey = dateKeyAddDays(goal.startDate, goal.totalDays - 1);
 
     return {
-        pagesToday,
+        pagesToday: pagesTodayTarget,
+        pagesTodayDone: pagesToday_actual,
         deadlineKey,
         remainingDays,
         remainingPages,
@@ -1344,14 +1365,23 @@ function renderGoalsList() {
     if (!listEl) return;
     listEl.innerHTML = "";
 
-    if (studyGoals.length === 0) {
+    const active   = studyGoals.filter(g => !g.archived);
+    const archived = studyGoals.filter(g =>  g.archived);
+
+    if (active.length === 0 && archived.length === 0) {
         listEl.innerHTML = '<p class="goals-empty">Nessun obiettivo impostato. Creane uno qui sotto! 👇</p>';
         return;
     }
 
-    studyGoals.forEach(g => {
+    // --- Obiettivi attivi ---
+    if (active.length === 0) {
+        listEl.insertAdjacentHTML("beforeend", '<p class="goals-empty">Nessun obiettivo attivo.</p>');
+    }
+
+    active.forEach(g => {
         const progress = computeGoalProgress(g);
         const isActive = g.id === activeGoalId;
+        const todayKey = getTodayKey();
 
         const card = document.createElement("div");
         card.className = "goal-card" + (isActive ? " goal-card--active" : "");
@@ -1361,7 +1391,7 @@ function renderGoalsList() {
 
         let statusLine;
         if (progress.completed) statusLine = "📖 Obiettivo raggiunto! 🎉";
-        else statusLine = `📖 ${progress.pagesToday} pagine da studiare oggi${progress.isOverdue ? " (in ritardo)" : ""}`;
+        else statusLine = `📖 Obiettivo: ${progress.pagesToday} pag. oggi · Fatte: <strong>${progress.pagesTodayDone}</strong>${progress.isOverdue ? " (in ritardo)" : ""}`;
 
         info.innerHTML = `
             <div class="goal-card-name">${escapeHtml(g.name)}${isActive ? ' <span class="goal-active-badge">Attivo</span>' : ''}</div>
@@ -1369,6 +1399,13 @@ function renderGoalsList() {
                 ${statusLine}<br>
                 📅 Scadenza: ${formatDateKeyIt(progress.deadlineKey)}<br>
                 📊 ${progress.pagesDoneTotal} / ${g.totalPages} pagine · ${g.totalDays} giorni totali
+            </div>
+            <div class="goal-pages-edit">
+                <label class="goal-pages-edit-label">Pagine studiate oggi:</label>
+                <div class="goal-pages-edit-row">
+                    <input type="number" min="0" class="goal-pages-input" id="gp-today-${g.id}" value="${progress.pagesTodayDone}">
+                    <button class="goal-pages-save-btn" onclick="saveGoalPagesToday('${g.id}')">Salva</button>
+                </div>
             </div>
         `;
 
@@ -1386,6 +1423,11 @@ function renderGoalsList() {
         editBtn.textContent = "✏️ Modifica";
         editBtn.onclick = () => editGoal(g.id);
 
+        const archiveBtn = document.createElement("button");
+        archiveBtn.className = "goal-action-btn goal-action-btn--archive";
+        archiveBtn.textContent = "📦 Archivia";
+        archiveBtn.onclick = () => archiveGoal(g.id);
+
         const delBtn = document.createElement("button");
         delBtn.className = "goal-action-btn goal-action-btn--danger";
         delBtn.textContent = "🗑️ Elimina";
@@ -1393,12 +1435,105 @@ function renderGoalsList() {
 
         actions.appendChild(selectBtn);
         actions.appendChild(editBtn);
+        actions.appendChild(archiveBtn);
         actions.appendChild(delBtn);
 
         card.appendChild(info);
         card.appendChild(actions);
         listEl.appendChild(card);
     });
+
+    // --- Sezione archiviati ---
+    if (archived.length > 0) {
+        const archHeader = document.createElement("div");
+        archHeader.className = "goals-archive-header";
+        archHeader.innerHTML = `<span>📦 Archiviati (${archived.length})</span><button class="goals-archive-toggle" onclick="toggleArchivedSection(this)">Mostra ▼</button>`;
+        listEl.appendChild(archHeader);
+
+        const archSection = document.createElement("div");
+        archSection.className = "goals-archived-section goals-archived-section--hidden";
+
+        archived.forEach(g => {
+            const progress = computeGoalProgress(g);
+
+            const card = document.createElement("div");
+            card.className = "goal-card goal-card--archived";
+
+            const info = document.createElement("div");
+            info.className = "goal-card-info";
+            info.innerHTML = `
+                <div class="goal-card-name">${escapeHtml(g.name)} <span class="goal-archived-badge">Archiviato</span></div>
+                <div class="goal-card-details">
+                    📊 ${progress.pagesDoneTotal} / ${g.totalPages} pagine · ${g.totalDays} giorni totali<br>
+                    📅 Scadenza: ${formatDateKeyIt(progress.deadlineKey)}
+                </div>
+            `;
+
+            const actions = document.createElement("div");
+            actions.className = "goal-card-actions";
+
+            const unarchBtn = document.createElement("button");
+            unarchBtn.className = "goal-action-btn";
+            unarchBtn.textContent = "↩️ Ripristina";
+            unarchBtn.onclick = () => unarchiveGoal(g.id);
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "goal-action-btn goal-action-btn--danger";
+            delBtn.textContent = "🗑️ Elimina";
+            delBtn.onclick = () => deleteGoal(g.id);
+
+            actions.appendChild(unarchBtn);
+            actions.appendChild(delBtn);
+
+            card.appendChild(info);
+            card.appendChild(actions);
+            archSection.appendChild(card);
+        });
+
+        listEl.appendChild(archSection);
+    }
+}
+
+function toggleArchivedSection(btn) {
+    const section = btn.closest(".goals-archive-header").nextElementSibling;
+    const hidden  = section.classList.toggle("goals-archived-section--hidden");
+    btn.textContent = hidden ? "Mostra ▼" : "Nascondi ▲";
+}
+
+function saveGoalPagesToday(goalId) {
+    const input = document.getElementById("gp-today-" + goalId);
+    if (!input) return;
+    const val = Math.max(0, Number(input.value) || 0);
+    updateGoalPagesForDate(goalId, getTodayKey(), 0, val);
+    renderGoalsList();
+    updateActiveGoalDisplay();
+    // Flash feedback
+    const btn = input.nextElementSibling;
+    if (btn) { const orig = btn.textContent; btn.textContent = "✓"; setTimeout(() => btn.textContent = orig, 1400); }
+}
+
+function archiveGoal(id) {
+    const g = studyGoals.find(g => g.id === id);
+    if (!g) return;
+    g.archived = true;
+    saveGoals();
+    if (activeGoalId === id) {
+        const next = studyGoals.find(g => !g.archived && g.id !== id);
+        activeGoalId = next ? next.id : null;
+        saveActiveGoal();
+    }
+    if (editingGoalId === id) resetGoalForm();
+    renderGoalsList();
+    updateActiveGoalDisplay();
+}
+
+function unarchiveGoal(id) {
+    const g = studyGoals.find(g => g.id === id);
+    if (!g) return;
+    g.archived = false;
+    saveGoals();
+    renderGoalsList();
+    updateActiveGoalDisplay();
 }
 
 function updateActiveGoalDisplay() {
@@ -1418,12 +1553,12 @@ function updateActiveGoalDisplay() {
     const valueClass = progress.completed ? "active-goal-value active-goal-value--done"
                       : progress.isOverdue ? "active-goal-value active-goal-value--late"
                       : "active-goal-value";
-    const pagesText = progress.completed ? "Raggiunto! 🎉" : progress.pagesToday;
+    const pagesText = progress.completed ? "Raggiunto! 🎉" : `${progress.pagesTodayDone} / ${progress.pagesToday}`;
 
     wrapper.innerHTML = `
         <div class="active-goal-name">🎯 ${escapeHtml(goal.name)}</div>
         <div class="active-goal-row">
-            <span class="active-goal-label">Pagine oggi:</span>
+            <span class="active-goal-label">Pagine oggi (fatte / da fare):</span>
             <span class="${valueClass}">${pagesText}</span>
         </div>
         <div class="active-goal-row">
